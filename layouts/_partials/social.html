@@ -1,19 +1,23 @@
 {{- /* social links from [params.social]; simple explicit mapping to keep
-      the icon set small. add cases here as needed. */ -}}
+      the set small. icons are font awesome (loaded via cdn in head/link.html);
+      add cases here as needed. */ -}}
 {{- $s := .Site.Params.social -}}
 <div class="social-links">
   {{- with $s.GitHub -}}
-    <a href="https://github.com/{{ . }}" rel="me noopener" target="_blank" title="github" aria-label="github">{{ partial "icon.html" "github" }}</a>
+    <a href="https://github.com/{{ . }}" rel="me noopener" target="_blank" title="github" aria-label="github"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
+  {{- end -}}
+  {{- with $s.LinkedIn -}}
+    <a href="https://www.linkedin.com/in/{{ . }}" rel="me noopener" target="_blank" title="linkedin" aria-label="linkedin"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a>
   {{- end -}}
   {{- with $s.Mastodon -}}
-    <a href="{{ . }}" rel="me noopener" target="_blank" title="mastodon" aria-label="mastodon">{{ partial "icon.html" "mastodon" }}</a>
+    <a href="{{ . }}" rel="me noopener" target="_blank" title="mastodon" aria-label="mastodon"><i class="fa-brands fa-mastodon" aria-hidden="true"></i></a>
   {{- end -}}
   {{- with $s.Email -}}
-    <a href="mailto:{{ . }}" title="email" aria-label="email">{{ partial "icon.html" "email" }}</a>
+    <a href="mailto:{{ . }}" title="email" aria-label="email"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
   {{- end -}}
   {{- if $s.RSS -}}
     {{- with $.Site.Home.OutputFormats.Get "RSS" -}}
-      <a href="{{ .RelPermalink }}" title="rss" aria-label="rss">{{ partial "icon.html" "rss" }}</a>
+      <a href="{{ .RelPermalink }}" title="rss" aria-label="rss"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
     {{- end -}}
   {{- end -}}
 </div>

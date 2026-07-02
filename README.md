@@ -10,7 +10,9 @@ and classical [tufte](https://edwardtufte.github.io/tufte-css/) margin notes.
 - left-rail **table of contents** with scrollspy (opt-in per page)
 - **dark mode**, lunr **search**, chroma syntax highlighting, mermaid (lazy,
   only on diagram pages), rss + json feeds
-- self-hosted **iA Writer Duo** font; inline-svg icons — no webfont icon set
+- self-hosted **iA Writer Duo** font; inline-svg icons for ui chrome
+- social icons via **font awesome** (loaded from cdnjs with SRI — the theme's one
+  external request; pin/bump the version in `layouts/_partials/head/link.html`)
 - **no node build**. requires **hugo extended** (for fingerprinting).
 
 ## css is precompiled — no sass at site-build time
@@ -66,6 +68,7 @@ submodules automatically.
 
 ## config the theme reads
 
-`params.home.profile`, `params.home.posts.sections`, `params.social`,
+`params.home.profile`, `params.home.posts.sections`, `params.social` (keys:
+`GitHub`, `LinkedIn`, `Mastodon`, `Email`, `RSS`),
 `params.search.enable`, `params.page.toc.enable`, `params.footer`, `params.author`,
 `params.dateFormat`, and `[menu.main]` (supports one level of nesting for dropdowns).
