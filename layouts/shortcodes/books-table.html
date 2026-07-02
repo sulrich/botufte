@@ -93,8 +93,16 @@
   padding: 0.4rem 0.75rem;
 }
 .bk-review p { margin: 0.3rem 0; font-size: 0.85rem; }
-.bk-review p:first-child { margin-top: 0; }
-.bk-review p:last-child  { margin-bottom: 0; }
+.bk-review > p:first-child { margin-top: 0; }
+.bk-review > p:last-child  { margin-bottom: 0; }
+.bk-review blockquote {
+  margin: 0.5rem 0;
+  padding: 0.1rem 0 0.1rem 0.75rem;
+  border-left: 3px solid var(--border-color, #ccc);
+  color: var(--gray, #666);
+  font-style: italic;
+}
+.bk-review blockquote p { margin: 0.25rem 0; }
 .bk-col-resize-handle {
   position: absolute;
   top: 0; right: 0;
