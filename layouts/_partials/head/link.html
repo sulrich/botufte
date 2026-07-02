@@ -13,6 +13,13 @@
   <link rel="alternate" type="application/feed+json" href="{{ .RelPermalink }}" title="{{ $.Site.Title }}">
 {{- end }}
 
+{{- /* font awesome (brands + solid) — social icons in the home profile.
+      external CDN dependency; served with SRI so a tampered file won't load.
+      pin the version here when bumping. */ -}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
+
 {{- /* stylesheet: precompiled css committed in the theme (assets/css/style.css),
       regenerated from style.scss via `make css` — see the theme README. hugo just
       fingerprints it, so the consuming site's build needs NO sass toolchain. */ -}}
