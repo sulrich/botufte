@@ -42,17 +42,26 @@
   color: var(--global-font-secondary-color, #888);
   white-space: nowrap;
 }
-#bk-table-container { overflow-x: auto; }
+#bk-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 430px;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+}
 .bk-books {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
 }
 .bk-books thead th {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 0.4rem 1.2rem 0.4rem 0.5rem;
   text-align: left;
   border-bottom: 2px solid var(--border-color, #ccc);
+  background: var(--table-thead, var(--background-color, #fff));
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
@@ -78,7 +87,14 @@
 .bk-col-author { width: 12rem; }
 .bk-col-year   { width: 4rem; text-align: center; }
 .bk-col-rating { width: 6rem; text-align: center; }
-.bk-reviewed-link { font-weight: 500; }
+.bk-reviewed { font-weight: 500; }
+.bk-detail-row td {
+  background: var(--code-bg);
+  padding: 0.4rem 0.75rem;
+}
+.bk-review p { margin: 0.3rem 0; font-size: 0.85rem; }
+.bk-review p:first-child { margin-top: 0; }
+.bk-review p:last-child  { margin-bottom: 0; }
 .bk-col-resize-handle {
   position: absolute;
   top: 0; right: 0;
@@ -148,16 +164,20 @@
     let sortCol = 'dateRead', sortDir = -1, filterText = '';
 
     function row(b) {
-      const titleCell = b.hasReview
-        ? `<a href="/books/${escAttr(b.slug)}/" class="bk-reviewed-link">${escHtml(b.title)}</a>`
+      const titleCell = b.review
+        ? `<span class="bk-reviewed">${escHtml(b.title)}</span>`
         : escHtml(b.title);
-      return `<tr>
+      let html = `<tr>
         <td>${b.dateRead || '—'}</td>
         <td>${titleCell}</td>
         <td>${escHtml(b.author)}</td>
         <td style="text-align:center">${escHtml(b.yearPublished)}</td>
         <td style="text-align:center">${stars(b.rating)}</td>
       </tr>`;
+      if (b.review) {
+        html += `<tr class="bk-detail-row"><td colspan="5"><div class="bk-review">${b.review}</div></td></tr>`;
+      }
+      return html;
     }
 
     function render() {
