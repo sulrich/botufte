@@ -41,6 +41,8 @@
     padding: 0 0.35rem;
     margin-right: 0.4rem;
   }
+  // description shown under each home-stream entry, slightly dimmer than body
+  .summary-desc { color: var(--fg-secondary); }
 }
 
 .archive-year {

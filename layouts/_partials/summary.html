@@ -6,5 +6,5 @@
     <a class="section-tag" href="{{ .Section | relLangURL }}">{{ .Section | lower }}</a>
     <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $df }}</time>
   </div>
-  {{- with .Summary }}<div class="summary-content">{{ . | plainify | truncate 280 }}</div>{{ end -}}
+  {{- with .Description }}<div class="summary-desc">{{ . }}</div>{{ end -}}
 </article>
