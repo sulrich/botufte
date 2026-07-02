@@ -1,0 +1,5 @@
+{{- $url := printf "https://x.com/%s/status/%s" (.Get "user") (.Get "id") -}}
+<blockquote class="twitter-tweet" data-dnt="true">
+  <a href="{{ $url }}">view post on x</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>

@@ -1,0 +1,17 @@
+{{- $f := .Site.Params.footer -}}
+{{- if ne $f.enable false -}}
+<footer class="footer">
+  <div class="footer-inner">
+    {{- with $f.custom }}<div>{{ . | safeHTML }}</div>{{ end -}}
+    {{- if ne $f.copyright false -}}
+      {{- $since := $f.since -}}
+      {{- $now := now.Format "2006" -}}
+      <span>&copy; {{ with $since }}{{ . }}–{{ end }}{{ $now }}
+        {{- if ne $f.author false }} {{ .Site.Params.author.name }}{{ end -}}
+      </span>
+    {{- end -}}
+    {{- with $f.license }} · {{ . | safeHTML }}{{ end -}}
+    {{- if ne $f.hugo false }} · built with <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">hugo</a>{{ end -}}
+  </div>
+</footer>
+{{- end -}}

@@ -1,0 +1,5 @@
+{{- /* tufte sidenote — numbered, floats into the right margin.
+      {{< sidenote >}}the aside text (markdown ok){{< /sidenote >}} */ -}}
+{{- $id := printf "sn-%d" .Ordinal -}}
+{{- $inner := trim (.Page.RenderString (dict "display" "inline") .Inner) "\n" -}}
+{{- printf "<label for=%q class=\"margin-toggle sidenote-number\"></label><input type=\"checkbox\" id=%q class=\"margin-toggle\"><span class=\"sidenote\">%s</span>" $id $id $inner | safeHTML -}}

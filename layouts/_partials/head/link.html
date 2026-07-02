@@ -1,0 +1,20 @@
+{{- /* favicons (files live in the project static/ dir) */ -}}
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+
+<link rel="canonical" href="{{ .Permalink }}">
+{{- with .OutputFormats.Get "RSS" }}
+  <link rel="alternate" type="application/rss+xml" href="{{ .RelPermalink }}" title="{{ $.Site.Title }}">
+{{- end }}
+{{- with .OutputFormats.Get "jsonfeed" }}
+  <link rel="alternate" type="application/feed+json" href="{{ .RelPermalink }}" title="{{ $.Site.Title }}">
+{{- end }}
+
+{{- /* stylesheet: precompiled css committed in the theme (assets/css/style.css),
+      regenerated from style.scss via `make css` — see the theme README. hugo just
+      fingerprints it, so the consuming site's build needs NO sass toolchain. */ -}}
+{{- $style := resources.Get "css/style.css" | fingerprint -}}
+<link rel="stylesheet" href="{{ $style.RelPermalink }}" integrity="{{ $style.Data.Integrity }}">

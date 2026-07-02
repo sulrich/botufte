@@ -1,0 +1,19 @@
+{{- /* social links from [params.social]; simple explicit mapping to keep
+      the icon set small. add cases here as needed. */ -}}
+{{- $s := .Site.Params.social -}}
+<div class="social-links">
+  {{- with $s.GitHub -}}
+    <a href="https://github.com/{{ . }}" rel="me noopener" target="_blank" title="github" aria-label="github">{{ partial "icon.html" "github" }}</a>
+  {{- end -}}
+  {{- with $s.Mastodon -}}
+    <a href="{{ . }}" rel="me noopener" target="_blank" title="mastodon" aria-label="mastodon">{{ partial "icon.html" "mastodon" }}</a>
+  {{- end -}}
+  {{- with $s.Email -}}
+    <a href="mailto:{{ . }}" title="email" aria-label="email">{{ partial "icon.html" "email" }}</a>
+  {{- end -}}
+  {{- if $s.RSS -}}
+    {{- with $.Site.Home.OutputFormats.Get "RSS" -}}
+      <a href="{{ .RelPermalink }}" title="rss" aria-label="rss">{{ partial "icon.html" "rss" }}</a>
+    {{- end -}}
+  {{- end -}}
+</div>

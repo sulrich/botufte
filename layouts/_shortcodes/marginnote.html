@@ -1,0 +1,5 @@
+{{- /* tufte margin note — unnumbered aside in the right margin.
+      {{< marginnote >}}the note text (markdown ok){{< /marginnote >}} */ -}}
+{{- $id := printf "mn-%d" .Ordinal -}}
+{{- $inner := trim (.Page.RenderString (dict "display" "inline") .Inner) "\n" -}}
+{{- printf "<label for=%q class=\"margin-toggle marginnote-toggle\">&#8853;</label><input type=\"checkbox\" id=%q class=\"margin-toggle\"><span class=\"marginnote\">%s</span>" $id $id $inner | safeHTML -}}

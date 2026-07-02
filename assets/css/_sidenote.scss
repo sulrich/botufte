@@ -1,0 +1,87 @@
+// ==========================================================================
+// tufte sidenotes / margin notes / margin figures
+// - shortcode sidenotes are auto-numbered with a css counter
+// - notes float into the right gutter reserved by _single.scss
+// - the checkbox+label toggle lets notes expand inline on narrow screens
+// - footnote->sidenote conversion (js) reuses .sidenote.no-counter
+// ==========================================================================
+
+.single .content { counter-reset: sidenote-counter; }
+
+// the in-text reference marker
+.sidenote-number {
+  counter-increment: sidenote-counter;
+  cursor: pointer;
+}
+.sidenote-number::after {
+  content: counter(sidenote-counter);
+  font-size: 0.7rem;
+  vertical-align: super;
+  color: var(--link);
+  margin-left: 1px;
+}
+.sidenote::before {
+  content: counter(sidenote-counter) " ";
+  font-size: 0.7rem;
+  vertical-align: super;
+  color: var(--link);
+}
+.sidenote.no-counter { counter-increment: none; }
+.sidenote.no-counter::before { content: none; }
+
+// the notes themselves — float into the right gutter
+.sidenote,
+.marginnote,
+.margin-figure {
+  float: right;
+  clear: right;
+  width: $margin-col;
+  margin-right: -($margin-col + $gap);
+  margin-top: 0.3rem;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--fg-secondary);
+  position: relative;
+}
+.margin-figure { margin-bottom: 1.2rem; }
+.margin-figure img { width: 100%; height: auto; border-radius: $radius; }
+.margin-figure figcaption { margin-top: 0.3rem; }
+
+// the ⊕ toggle used by marginnotes (and shown on narrow for sidenotes)
+.marginnote-toggle { display: none; cursor: pointer; color: var(--link); }
+
+// hide the checkbox itself; it only drives the :checked toggle
+input.margin-toggle { display: none; }
+
+// ---- wide screens: notes always visible in the margin ----
+@media (min-width: #{$bp-margin + 1}) {
+  // marginnote's ⊕ is not needed when the note is always shown
+  label.marginnote-toggle { display: none; }
+}
+
+// ---- narrow screens: notes collapse; tap the marker to expand inline ----
+@media (max-width: $bp-margin) {
+  .sidenote,
+  .marginnote {
+    float: none;
+    width: auto;
+    margin: 0;
+    display: none;
+    padding: 0.6rem 0.8rem;
+    border-left: 2px solid var(--border);
+    background: var(--code-bg);
+    border-radius: $radius;
+  }
+  .margin-figure {
+    float: none;
+    width: auto;
+    margin: 1rem 0;
+  }
+  .marginnote-toggle { display: inline; }
+  .margin-toggle:checked + .sidenote,
+  .margin-toggle:checked + .marginnote {
+    display: block;
+    margin: 0.6rem 0;
+  }
+}

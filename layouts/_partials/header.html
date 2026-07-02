@@ -1,0 +1,46 @@
+{{- $title := .Site.Params.header.title.name | default .Site.Title -}}
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="{{ .Site.Home.RelPermalink }}">{{ $title }}</a>
+
+    <nav class="nav">
+      <ul class="menu">
+        {{- range .Site.Menus.main -}}
+          {{- if .Parent }}{{ continue }}{{ end -}}
+          {{- $active := or ($.IsMenuCurrent "main" .) ($.HasMenuCurrent "main" .) -}}
+          <li{{ if .HasChildren }} class="has-children"{{ end }}>
+            <a href="{{ .URL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if $active }} class="active"{{ end }}>
+              {{- .Name -}}
+              {{- if .HasChildren }} <span class="caret" aria-hidden="true">▾</span>{{ end -}}
+            </a>
+            {{- with .Children -}}
+              <ul class="submenu">
+                {{- range . -}}
+                  <li><a href="{{ .URL }}"{{ with .Title }} title="{{ . }}"{{ end }}>{{ .Name }}</a></li>
+                {{- end -}}
+              </ul>
+            {{- end -}}
+          </li>
+        {{- end -}}
+      </ul>
+
+      {{- if .Site.Params.search.enable -}}
+      {{- $lunr := resources.Get "lib/lunr/lunr.min.js" | minify | fingerprint -}}
+      <div class="search" data-index="{{ (.Site.Home.OutputFormats.Get "json").RelPermalink }}" data-lunr="{{ $lunr.RelPermalink }}" data-max="{{ .Site.Params.search.maxResultLength | default 10 }}" data-snippet="{{ .Site.Params.search.snippetLength | default 100 }}">
+        <button class="icon-btn search-open" id="search-open" aria-label="search" title="search">{{ partial "icon.html" "search" }}</button>
+        <div class="search-panel" id="search-panel" hidden>
+          <input type="search" id="search-input" placeholder="{{ .Site.Params.search.placeholder | default "search" }}" autocomplete="off" spellcheck="false">
+          <ul class="search-results" id="search-results"></ul>
+        </div>
+      </div>
+      {{- end -}}
+
+      <button class="icon-btn theme-toggle" id="theme-toggle" aria-label="toggle theme" title="toggle theme">
+        <span class="icon-moon">{{ partial "icon.html" "moon" }}</span>
+        <span class="icon-sun">{{ partial "icon.html" "sun" }}</span>
+      </button>
+
+      <button class="icon-btn menu-toggle" id="menu-toggle" aria-label="menu">{{ partial "icon.html" "menu" }}</button>
+    </nav>
+  </div>
+</header>

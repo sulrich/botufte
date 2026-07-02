@@ -1,0 +1,14 @@
+#!/bin/sh
+# keep the committed css in sync with the scss on every commit, so a fresh
+# checkout (e.g. as a submodule) always has current, build-ready css.
+# enable with: make hooks   (sets core.hooksPath to .githooks)
+set -e
+
+if ! command -v sass >/dev/null 2>&1; then
+  echo "pre-commit: 'sass' (dart-sass) not found — install it to regenerate assets/css/style.css" >&2
+  echo "  brew install sass/sass/sass   # or: npm i -g sass" >&2
+  exit 1
+fi
+
+sass assets/css/style.scss assets/css/style.css --style=compressed --no-source-map
+git add assets/css/style.css

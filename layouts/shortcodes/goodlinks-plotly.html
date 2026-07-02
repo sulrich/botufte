@@ -1,0 +1,51 @@
+<!-- goodlinks-plotly: load once per page before any goodlinks chart shortcodes.
+     colors use the theme's css custom properties so the tables/charts adapt to
+     dark mode. -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+<style>
+  .gl-chart { background: var(--bg); border-radius: 6px; padding: 0.5rem; margin-bottom: 1.5rem; }
+  .gl-chart-error { color: var(--link-hover); font-size: 0.85rem; padding: 0.5rem; }
+
+  /* heatmap */
+  .gl-heatmap-toolbar { margin-bottom: 0.4rem; font-size: 0.85rem; }
+  #gl-heatmap-year { padding: 0.2rem 0.4rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); }
+  #gl-heatmap { overflow-x: auto; }
+
+  /* sortable / resizable table */
+  .gl-table-section { width: 100%; }
+  .gl-table-toolbar { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+  .gl-table-toolbar label { font-size: 0.85rem; }
+  #gl-year-select { padding: 0.2rem 0.4rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); }
+  #gl-table-filter { padding: 0.3rem 0.5rem; font-size: 0.85rem; width: 220px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); }
+  #gl-table-count { font-size: 0.78rem; color: var(--fg-secondary); }
+  #gl-table-container { overflow-x: auto; overflow-y: auto; max-height: 430px; border: 1px solid var(--border); border-radius: 4px; width: 100%; }
+  table.gl-articles { border-collapse: collapse; width: 100%; font-size: 0.78rem; table-layout: fixed; }
+  table.gl-articles thead th { position: sticky; top: 0; z-index: 1; background: var(--table-thead); }
+  table.gl-articles th,
+  table.gl-articles td { padding: 0.28rem 0.5rem; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table.gl-articles th { position: relative; cursor: pointer; user-select: none; padding-right: 14px; }
+  table.gl-articles th:hover { background: var(--code-bg); }
+  table.gl-articles th.sort-asc::after  { content: " ▲"; }
+  table.gl-articles th.sort-desc::after { content: " ▼"; }
+  table.gl-articles tr.gl-row-even td { background: var(--code-bg); }
+  table.gl-articles tr.gl-detail-row td { background: var(--code-bg); white-space: normal; overflow: visible; text-overflow: clip; padding: 0.4rem 0.75rem; }
+  .gl-highlight-note { font-size: 0.78rem; margin: 0.2rem 0; }
+  blockquote.gl-highlight { margin: 0.3rem 0 0.3rem 0.25rem; padding: 0.15rem 0.6rem; border-left: 3px solid var(--blockquote); color: var(--fg-secondary); }
+  table.gl-articles td a { color: var(--link); text-decoration: none; }
+  table.gl-articles td a:hover { text-decoration: underline; }
+  .gl-col-date { width: 74px; }
+  .gl-col-tags { width: 240px; white-space: normal; }
+  .gl-col-resize-handle {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 5px;
+    cursor: col-resize; z-index: 2;
+  }
+  .gl-col-resize-handle:hover { background: rgba(127,127,127,0.25); }
+  .gl-tag-pill {
+    display: inline-block;
+    background: var(--table-thead);
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin: 1px 1px;
+    font-size: 0.7rem;
+  }
+</style>

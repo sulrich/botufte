@@ -1,0 +1,116 @@
+// ==========================================================================
+// header / top nav (with nested dropdown) + footer bits shared
+// ==========================================================================
+
+.header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: $page-w;
+  margin: 0 auto;
+  height: $header-height;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--fg);
+  &:hover { color: var(--link); text-decoration: none; }
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.menu {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.menu > li { position: relative; }
+.menu a {
+  color: var(--fg);
+  font-size: 0.95rem;
+  &:hover, &.active { color: var(--link); text-decoration: none; }
+}
+
+// dropdown for nested menu entries (e.g. /misc/*)
+.menu .has-children > .submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 9rem;
+  background: var(--header-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  padding: 0.35rem 0;
+  margin: 0;
+  list-style: none;
+  display: none;
+  z-index: 30;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.menu .has-children:hover > .submenu,
+.menu .has-children:focus-within > .submenu,
+.menu .has-children.open > .submenu { display: block; }
+.submenu li { padding: 0; }
+.submenu a { display: block; padding: 0.3rem 0.9rem; white-space: nowrap; }
+.menu .caret { font-size: 0.7rem; opacity: 0.6; }
+
+// icon buttons (theme toggle, search, menu toggle)
+.icon-btn {
+  background: none;
+  border: 0;
+  padding: 0.2rem;
+  cursor: pointer;
+  color: var(--fg-secondary);
+  display: inline-flex;
+  align-items: center;
+  &:hover { color: var(--link); }
+  svg { width: 1.15rem; height: 1.15rem; }
+}
+
+// theme toggle: show moon in light, sun in dark
+.theme-toggle .icon-sun { display: none; }
+[theme="dark"] .theme-toggle .icon-sun { display: inline; }
+[theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+// mobile menu toggle hidden on wide screens
+.menu-toggle { display: none; }
+
+@media (max-width: 680px) {
+  .menu-toggle { display: inline-flex; }
+  .menu {
+    display: none;
+    position: absolute;
+    top: $header-height;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1.25rem;
+    z-index: 40;
+  }
+  .header.menu-open .menu { display: flex; }
+  .menu > li { width: 100%; padding: 0.35rem 0; }
+  .menu .has-children > .submenu {
+    position: static;
+    display: block;
+    border: 0;
+    box-shadow: none;
+    padding: 0.2rem 0 0.2rem 1rem;
+  }
+}

@@ -1,0 +1,211 @@
+<div class="bk-table-section">
+  <div class="bk-table-toolbar">
+    <input id="bk-table-filter" type="search" placeholder="filter by title, author, year…" />
+    <span id="bk-table-count"></span>
+  </div>
+  <div id="bk-table-container">
+    <table id="bk-books-table" class="bk-books">
+      <thead>
+        <tr>
+          <th data-col="dateRead" class="bk-col-date sort-desc">date read</th>
+          <th data-col="title">title</th>
+          <th data-col="author" class="bk-col-author">author</th>
+          <th data-col="yearPublished" class="bk-col-year">year</th>
+          <th data-col="rating" class="bk-col-rating">rating</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.bk-table-section { margin: 1rem 0; }
+.bk-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+#bk-table-filter {
+  flex: 1;
+  max-width: 28rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: var(--background-color, #fff);
+  color: inherit;
+}
+#bk-table-count {
+  font-size: 0.85rem;
+  color: var(--global-font-secondary-color, #888);
+  white-space: nowrap;
+}
+#bk-table-container { overflow-x: auto; }
+.bk-books {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.bk-books thead th {
+  position: relative;
+  padding: 0.4rem 1.2rem 0.4rem 0.5rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color, #ccc);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.bk-books thead th::after {
+  content: '';
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+  color: var(--global-font-secondary-color, #888);
+}
+.bk-books thead th.sort-asc::after  { content: '▲'; }
+.bk-books thead th.sort-desc::after { content: '▼'; }
+.bk-books td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--border-color, #eee);
+  vertical-align: top;
+}
+.bk-books tr:last-child td { border-bottom: none; }
+.bk-col-date   { width: 7rem; }
+.bk-col-author { width: 12rem; }
+.bk-col-year   { width: 4rem; text-align: center; }
+.bk-col-rating { width: 6rem; text-align: center; }
+.bk-reviewed-link { font-weight: 500; }
+.bk-col-resize-handle {
+  position: absolute;
+  top: 0; right: 0;
+  width: 6px; height: 100%;
+  cursor: col-resize;
+}
+[theme=dark] #bk-table-filter {
+  background: var(--background-color, #1a1a1a);
+  border-color: var(--border-color, #444);
+}
+</style>
+
+<script>
+(async () => {
+  function tableError(msg) {
+    document.getElementById('bk-table-container').innerHTML =
+      `<p style="color:red">books table: ${msg}</p>`;
+  }
+
+  async function loadData() {
+    if (window.__booksData__) return window.__booksData__;
+    {{- $data := .Page.Resources.GetMatch "books-data.json.gz" }}
+    {{- if $data }}
+    const url = "{{ $data.RelPermalink }}";
+    {{- else }}
+    throw new Error('books-data.json.gz not found as page resource');
+    {{- end }}
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetch failed: ${resp.status}`);
+    const ds   = new DecompressionStream('gzip');
+    const text = await new Response(resp.body.pipeThrough(ds)).text();
+    window.__booksData__ = JSON.parse(text);
+    return window.__booksData__;
+  }
+
+  function makeColumnsResizable(table) {
+    table.querySelectorAll('thead th').forEach(th => {
+      const handle = document.createElement('span');
+      handle.className = 'bk-col-resize-handle';
+      th.appendChild(handle);
+      handle.addEventListener('click', e => e.stopPropagation());
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault(); e.stopPropagation();
+        const startX = e.clientX, startW = th.getBoundingClientRect().width;
+        document.body.style.cursor = 'col-resize';
+        const onMove = e => { th.style.width = Math.max(36, startW + e.clientX - startX) + 'px'; };
+        const onUp   = () => {
+          document.body.style.cursor = '';
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+    });
+  }
+
+  function stars(n) { return n ? '★'.repeat(n) : '—'; }
+
+  function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) { return String(s ?? '').replace(/"/g,'&quot;'); }
+
+  function renderTable(books) {
+    const tbody = document.querySelector('#bk-books-table tbody');
+    let sortCol = 'dateRead', sortDir = -1, filterText = '';
+
+    function row(b) {
+      const titleCell = b.hasReview
+        ? `<a href="/books/${escAttr(b.slug)}/" class="bk-reviewed-link">${escHtml(b.title)}</a>`
+        : escHtml(b.title);
+      return `<tr>
+        <td>${b.dateRead || '—'}</td>
+        <td>${titleCell}</td>
+        <td>${escHtml(b.author)}</td>
+        <td style="text-align:center">${escHtml(b.yearPublished)}</td>
+        <td style="text-align:center">${stars(b.rating)}</td>
+      </tr>`;
+    }
+
+    function render() {
+      const lower = filterText.toLowerCase();
+      let filtered = books;
+      if (lower) {
+        filtered = books.filter(b =>
+          (b.title         || '').toLowerCase().includes(lower) ||
+          (b.author        || '').toLowerCase().includes(lower) ||
+          (b.yearPublished || '').toLowerCase().includes(lower)
+        );
+      }
+      const sorted = [...filtered].sort((a, b) => {
+        if (sortCol === 'rating') {
+          return sortDir * ((a.rating || 0) - (b.rating || 0));
+        }
+        const av = sortCol === 'dateRead' ? (a.dateRead || '0000') : (a[sortCol] ?? '');
+        const bv = sortCol === 'dateRead' ? (b.dateRead || '0000') : (b[sortCol] ?? '');
+        return sortDir * String(av).localeCompare(String(bv));
+      });
+      tbody.innerHTML = sorted.map(row).join('');
+      document.getElementById('bk-table-count').textContent =
+        lower ? `${sorted.length} of ${books.length} books` : `${books.length} books`;
+    }
+
+    document.querySelectorAll('#bk-books-table th').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        sortDir = (sortCol === col) ? sortDir * -1 : -1;
+        sortCol = col;
+        document.querySelectorAll('#bk-books-table th').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+        th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        render();
+      });
+    });
+
+    document.getElementById('bk-table-filter').addEventListener('input', e => {
+      filterText = e.target.value;
+      render();
+    });
+
+    makeColumnsResizable(document.getElementById('bk-books-table'));
+    render();
+  }
+
+  try {
+    const { books } = await loadData();
+    renderTable(books);
+  } catch (err) { tableError(err.message); }
+})();
+</script>

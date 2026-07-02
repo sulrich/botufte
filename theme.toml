@@ -1,0 +1,13 @@
+name = "botufte"
+license = "MIT"
+licenselink = "https://github.com/sulrich/botwerks-site"
+description = "a lightweight loveit x tufte hugo theme — clean lists, commingled home, lunr search, left-rail toc, tufte margin sidenotes, self-hosted ia writer duo."
+homepage = "https://botwerks.net/"
+demosite = "https://botwerks.net/"
+tags = ["blog", "minimal", "tufte", "sidenotes", "dark mode", "search"]
+features = ["sidenotes", "toc", "search", "dark-mode", "rss", "json-feed"]
+min_version = "0.146.0"
+
+[author]
+  name = "steve ulrich"
+  homepage = "https://botwerks.net/"

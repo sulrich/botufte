@@ -1,0 +1,98 @@
+// ==========================================================================
+// base: self-hosted font, reset-ish, typography
+// no serifs, no decorative italics (tufte's italic headings/captions are out).
+// ==========================================================================
+
+@font-face {
+  font-family: "iA Writer Duo";
+  src: url("/fonts/iAWriterDuoS-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Duo";
+  src: url("/fonts/iAWriterDuoS-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "iA Writer Duo";
+  src: url("/fonts/iAWriterDuoS-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: $font-size;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: $font-body;
+  font-weight: 400;
+  line-height: $line-height;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: var(--selection); }
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  &:hover { color: var(--link-hover); text-decoration: underline; }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 1.8rem 0 0.8rem;
+}
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.15rem; }
+h4, h5, h6 { font-size: 1rem; }
+
+p { margin: 0 0 1rem; }
+
+img { max-width: 100%; height: auto; }
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+blockquote {
+  margin: 1.5rem 0;
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 3px solid var(--blockquote);
+  color: var(--fg-secondary);
+}
+
+mark { background: var(--mark); color: inherit; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
+  thead th { background: var(--table-thead); }
+}
+
+// keep decorative italics out; <em> stays semantic
+figure { margin: 1.5rem 0; }
+figcaption {
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  margin-top: 0.4rem;
+}

@@ -1,0 +1,97 @@
+// ==========================================================================
+// code: inline code + chroma syntax highlighting (class-based, noClasses=false)
+// token colors carried from the loveit fork; emitted via @each for both themes.
+// ==========================================================================
+
+code, pre, kbd, samp { font-family: $font-body; }
+
+// inline code
+:not(pre) > code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+  border-radius: $radius;
+}
+
+// code block container
+.highlight {
+  position: relative;
+  margin: 1.5rem 0;
+  background: var(--code-bg);
+  border-radius: $radius;
+  font-size: 0.85rem;
+  overflow: hidden;
+  pre {
+    margin: 0;
+    padding: 0.8rem 1rem;
+    overflow-x: auto;
+    line-height: 1.45;
+    background: transparent;
+  }
+  // line-number table (lineNumbersInTable = true)
+  .lntable { border: 0; width: auto; margin: 0; }
+  .lntable td, .lntable th { border: 0; padding: 0; }
+  .lntd:first-child { width: 1%; }
+  .ln, .lnt { color: var(--fg-secondary); opacity: 0.55; user-select: none; }
+  table td { padding: 0; }
+}
+
+// copy button (wired in stage 4)
+.code-copy {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.4rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  color: var(--fg-secondary);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  &:hover { color: var(--link); }
+}
+.highlight:hover .code-copy { opacity: 1; }
+// touch devices have no hover — keep the button visible
+@media (hover: none) { .code-copy { opacity: 1; } }
+
+// ---- token colors --------------------------------------------------------
+$chroma-light: (
+  "k": #b501a9, "kc": #b501a9, "kd": #b501a9, "kn": #b501a9, "kp": #b501a9,
+  "kr": #b501a9, "kt": #b501a9, "n": #333333, "na": #2b77fa, "nb": #f74840,
+  "bp": #f74840, "nc": #cb8100, "no": #2b77fa, "nd": #0086c1, "ni": #2b77fa,
+  "ne": #2b77fa, "nf": #2b77fa, "fm": #1ccad6, "nl": #2b77fa, "nn": #2b77fa,
+  "nx": #333333, "py": #2b77fa, "nt": #2b77fa, "nv": #2b77fa,
+  "s": #24a443, "s1": #24a443, "s2": #24a443, "sb": #24a443, "sc": #24a443,
+  "sd": #24a443, "se": #24a443, "sh": #24a443, "si": #24a443, "sx": #24a443,
+  "sr": #24a443, "ss": #24a443, "sa": #24a443, "dl": #24a443,
+  "m": #e2893c, "mb": #e2893c, "mf": #e2893c, "mh": #e2893c, "mi": #e2893c,
+  "il": #e2893c, "mo": #e2893c, "o": #f19b04, "ow": #b501a9,
+  "c": #a0a1a8, "c1": #a0a1a8, "cm": #a0a1a8, "cs": #a0a1a8, "cp": #a0a1a8,
+  "cpf": #a0a1a8, "ch": #a0a1a8, "gd": #e72d40, "gi": #24a443, "gh": #2b77fa,
+);
+$chroma-dark: (
+  "k": #d371e3, "kc": #d371e3, "kd": #d371e3, "kn": #d371e3, "kp": #d371e3,
+  "kr": #d371e3, "kt": #d371e3, "n": #a9b2c0, "na": #41b0f5, "nb": #19b9c4,
+  "bp": #ecbf6f, "nc": #ecbf6f, "no": #41b0f5, "nd": #ecbf6f, "ni": #41b0f5,
+  "ne": #41b0f5, "nf": #41b0f5, "fm": #19b9c4, "nl": #41b0f5, "nn": #41b0f5,
+  "nx": #a9a9b3, "py": #41b0f5, "nt": #41b0f5, "nv": #41b0f5,
+  "s": #8cc570, "s1": #8cc570, "s2": #8cc570, "sb": #8cc570, "sc": #8cc570,
+  "sd": #8cc570, "se": #8cc570, "sh": #8cc570, "si": #8cc570, "sx": #8cc570,
+  "sr": #8cc570, "ss": #8cc570, "sa": #8cc570, "dl": #8cc570,
+  "m": #db985c, "mb": #db985c, "mf": #db985c, "mh": #db985c, "mi": #db985c,
+  "il": #db985c, "mo": #db985c, "o": #ecbf6f, "ow": #d371e3,
+  "c": #7e848f, "c1": #7e848f, "cm": #7e848f, "cs": #7e848f, "cp": #7e848f,
+  "cpf": #7e848f, "ch": #7e848f, "gd": #f16372, "gi": #8cc570, "gh": #41b0f5,
+);
+
+@each $token, $color in $chroma-light {
+  .chroma .#{$token} { color: $color; }
+}
+[theme="dark"] {
+  @each $token, $color in $chroma-dark {
+    .chroma .#{$token} { color: $color; }
+  }
+}

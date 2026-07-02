@@ -1,0 +1,9 @@
+{{- /* lunr search index: one doc per regular page (minus hiddenFromSearch). */ -}}
+{{- $len := .Site.Params.search.contentLength | default 4000 -}}
+{{- $pages := where .Site.RegularPages "Params.hiddenfromsearch" "!=" true -}}
+[
+{{- range $i, $p := $pages -}}
+{{- if $i }},{{ end }}
+{"ref":{{ $p.RelPermalink | jsonify }},"title":{{ $p.Title | jsonify }},"section":{{ $p.Section | jsonify }},"date":{{ $p.Date.Format "2006-01-02" | jsonify }},"tags":{{ (or $p.Params.tags slice) | jsonify }},"categories":{{ (or $p.Params.categories slice) | jsonify }},"content":{{ (substr $p.Plain 0 $len) | jsonify }}}
+{{- end -}}
+]

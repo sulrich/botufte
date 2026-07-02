@@ -1,0 +1,29 @@
+{{- define "content" -}}
+  {{- $df := .Site.Params.section.dateFormat | default "02-Jan" -}}
+  {{- $paginate := .Site.Params.section.paginate | default 50 -}}
+  <div class="list">
+    <h1 class="list-title">{{ .Title | lower }}</h1>
+
+    {{- with .Content }}<div class="content">{{ . }}</div>{{ end -}}
+
+    {{- $pages := .Pages -}}
+    {{- if .IsHome }}{{ $pages = .Site.RegularPages }}{{ end -}}
+    {{- $paginated := .Paginate $pages $paginate -}}
+
+    {{- /* group the current page of results by year */ -}}
+    {{- $byYear := $paginated.Pages.GroupByDate "2006" -}}
+    {{- range $byYear -}}
+      <h2 class="archive-year">{{ .Key }}</h2>
+      <ul class="archive-list">
+        {{- range .Pages -}}
+          <li>
+            <span class="archive-date">{{ .Date.Format $df }}</span>
+            <a href="{{ .RelPermalink }}">{{ .Title | lower }}</a>
+          </li>
+        {{- end -}}
+      </ul>
+    {{- end -}}
+
+    {{- partial "pagination.html" $paginated -}}
+  </div>
+{{- end -}}

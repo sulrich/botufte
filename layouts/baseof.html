@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="{{ or site.Language.Locale "en" }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noodp">
+  <title>{{ block "title" . }}{{ if .IsHome }}{{ .Site.Title }}{{ else }}{{ .Title }} - {{ .Site.Title }}{{ end }}{{ end }}</title>
+  {{- partial "head/meta.html" . -}}
+  {{- partial "head/link.html" . -}}
+</head>
+<body>
+  {{- /* set dark theme before paint to avoid flash */ -}}
+  {{- $default := .Site.Params.defaultTheme | default "auto" -}}
+  <script>(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('{{ $default }}' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : '{{ $default }}' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+  <div class="wrapper">
+    {{- partial "header.html" . -}}
+    <main class="main">
+      <div class="container">
+        {{- block "content" . }}{{ end -}}
+      </div>
+    </main>
+    {{- partial "footer.html" . -}}
+  </div>
+
+  <a href="#" id="back-to-top" aria-label="back to top">{{ partial "icon.html" "arrow-up" }}</a>
+
+  {{- /* scripts */ -}}
+  {{- $js := resources.Get "js/theme.js" | minify | fingerprint -}}
+  <script defer src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>
+
+  {{- /* mermaid: only on pages that actually contain a diagram */ -}}
+  {{- if .Store.Get "hasMermaid" }}{{ partial "mermaid.html" . }}{{ end -}}
+</body>
+</html>

@@ -1,0 +1,13 @@
+{{- $p := .Site.Params.home.profile -}}
+<div class="profile">
+  {{- $avatar := $p.avatarURL -}}
+  {{- with $avatar -}}
+    <img class="profile-avatar" src="{{ . }}" alt="{{ $p.title | default $.Site.Title }}" width="128" height="128">
+  {{- end -}}
+  {{- with $p.title }}<h1 class="profile-title">{{ . | safeHTML }}</h1>{{ end -}}
+  {{- with $p.subtitle }}<p class="profile-subtitle">{{ . | safeHTML }}</p>{{ end -}}
+  {{- if ne $p.social false -}}
+    {{- partial "social.html" . -}}
+  {{- end -}}
+  {{- with $p.disclaimer }}<p class="profile-disclaimer">{{ . | safeHTML }}</p>{{ end -}}
+</div>

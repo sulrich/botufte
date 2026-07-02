@@ -1,0 +1,17 @@
+{{- /* loaded from baseof only when a page contains a mermaid diagram.
+      lazy-imports the mermaid esm runtime from cdn and re-renders on theme toggle.
+      keeps the loader out of baseof and off every diagram-free page. */ -}}
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  const nodes = Array.from(document.querySelectorAll(".mermaid"));
+  const src = nodes.map((n) => n.textContent);
+  const theme = () => (document.body.getAttribute("theme") === "dark" ? "dark" : "neutral");
+  function render() {
+    nodes.forEach((n, i) => { n.removeAttribute("data-processed"); n.innerHTML = src[i]; });
+    mermaid.initialize({ startOnLoad: false, theme: theme(), securityLevel: "loose", fontFamily: "inherit" });
+    mermaid.run({ nodes });
+  }
+  render();
+  new MutationObserver((muts) => muts.forEach((m) => { if (m.attributeName === "theme") render(); }))
+    .observe(document.body, { attributes: true, attributeFilter: ["theme"] });
+</script>

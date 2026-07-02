@@ -1,0 +1,41 @@
+{{- /* home json feed: commingled posts + til + links */ -}}
+{{- $pages := slice -}}
+{{- $sections := .Site.Params.home.posts.sections | default (slice "posts") -}}
+{{- $limit := .Site.Params.home.rss | default 20 -}}
+{{- $pages = (where .Site.RegularPages "Type" "in" $sections).ByDate.Reverse | first $limit -}}
+{{- $title := cond (eq .Title .Site.Title) .Site.Title (printf "%s on %s" .Title .Site.Title) -}}
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": {{ $title | lower | jsonify }},
+  "home_page_url": {{ .Permalink | jsonify }},
+  {{- with .OutputFormats.Get "jsonfeed" }}
+  "feed_url": {{ .Permalink | jsonify }},
+  {{- end }}
+  {{- with .Site.Params.author }}
+  "authors": [
+    {
+      {{- with .name }}"name": {{ . | jsonify }},{{ end }}
+      {{- with .link }}"url": {{ . | jsonify }},{{ end }}
+      {{- with .avatar_url }}"avatar": {{ . | jsonify }}{{ end }}
+    }
+  ],
+  {{- end }}
+  {{- if $pages }}
+  "items": [
+    {{- range $i, $p := $pages }}
+    {{- if $i }},{{ end }} {
+      "title": {{ $p.Title | jsonify }},
+      "id": {{ $p.Permalink | jsonify }},
+      "url": {{ $p.Permalink | jsonify }},
+      {{- if $.Site.Params.showFullTextinJSONFeed }}
+      "summary": {{ with $p.Description }}{{ . | jsonify }}{{ else }}{{ $p.Summary | jsonify }}{{ end }},
+      "content_html": {{ $p.Content | jsonify }},
+      {{- else }}
+      "content_text": {{ with $p.Description }}{{ . | jsonify }}{{ else }}{{ $p.Summary | jsonify }}{{ end }},
+      {{- end }}
+      "date_published": {{ $p.Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }}
+    }
+    {{- end }}
+  ]
+  {{- end }}
+}

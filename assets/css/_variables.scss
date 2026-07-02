@@ -1,0 +1,89 @@
+// ==========================================================================
+// variables + theme tokens
+// palette values carried over from the sulrich-loveit fork.
+// SCSS vars stay build-time only; everything the templates/shortcodes touch
+// at runtime is exposed as CSS custom properties (so dark mode is a single
+// [theme=dark] switch and shortcodes can read --link-color etc.).
+// ==========================================================================
+
+// ---- light ----
+$bg:              #fdfdfc;
+$fg:              #161209;
+$fg-secondary:    #6b6b70;
+$link:            #2d96bd;
+$link-hover:      #ef3982;
+$border:          #e6e6e2;
+$header-bg:       #f8f8f6;
+$code-fg:         #e74c3c;
+$code-bg:         #f4f4f0;
+$table-thead:     #ededea;
+$blockquote:      #6bd6fd;
+$mark:            rgba(53, 166, 247, 0.22);
+$selection:       rgba(53, 166, 247, 0.25);
+
+// ---- dark ----
+$bg-d:            #1c1d20;
+$fg-d:            #c7c7cc;
+$fg-secondary-d:  #8a8a90;
+$link-d:          #55bde2;
+$link-hover-d:    #bdebfc;
+$border-d:        #35363a;
+$header-bg-d:     #242528;
+$code-fg-d:       #e5bf78;
+$code-bg-d:       #26272b;
+$table-thead-d:   #202126;
+$blockquote-d:    #59c5ec;
+$mark-d:          rgba(50, 112, 194, 0.4);
+$selection-d:     rgba(50, 112, 194, 0.4);
+
+// ---- metrics ----
+$font-body:       "iA Writer Duo", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+$font-size:       17px;
+$line-height:     1.6;
+$measure:         40rem;     // main text column width
+$margin-col:      14rem;     // right gutter for sidenotes / margin figures
+$toc-col:         11rem;     // left toc rail
+$gap:             2rem;      // grid gutter
+$page-w:          71rem;     // global content width (header/footer/single grid)
+$narrow-w:        44rem;     // home/list/single-page reading width
+$bp-margin:       1000px;    // below this, margins collapse inline
+$header-height:   3.25rem;
+$radius:          4px;
+
+:root {
+  --bg: #{$bg};
+  --fg: #{$fg};
+  --fg-secondary: #{$fg-secondary};
+  --link: #{$link};
+  --link-hover: #{$link-hover};
+  --border: #{$border};
+  --header-bg: #{$header-bg};
+  --code-fg: #{$code-fg};
+  --code-bg: #{$code-bg};
+  --table-thead: #{$table-thead};
+  --blockquote: #{$blockquote};
+  --mark: #{$mark};
+  --selection: #{$selection};
+
+  // aliases consumed by the ported book/goodlinks shortcodes
+  --background-color: var(--bg);
+  --border-color: var(--border);
+  --global-font-secondary-color: var(--fg-secondary);
+  --link-color: var(--link);
+}
+
+[theme="dark"] {
+  --bg: #{$bg-d};
+  --fg: #{$fg-d};
+  --fg-secondary: #{$fg-secondary-d};
+  --link: #{$link-d};
+  --link-hover: #{$link-hover-d};
+  --border: #{$border-d};
+  --header-bg: #{$header-bg-d};
+  --code-fg: #{$code-fg-d};
+  --code-bg: #{$code-bg-d};
+  --table-thead: #{$table-thead-d};
+  --blockquote: #{$blockquote-d};
+  --mark: #{$mark-d};
+  --selection: #{$selection-d};
+}

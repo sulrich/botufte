@@ -1,0 +1,16 @@
+{{- /* arg is a Pager (result of .Paginate). renders prev/next + counter. */ -}}
+{{- if gt .TotalPages 1 -}}
+<nav class="pagination">
+  {{- if .HasPrev -}}
+    <a href="{{ .Prev.URL }}">← newer</a>
+  {{- else -}}
+    <span class="disabled">← newer</span>
+  {{- end -}}
+  <span class="page-count">{{ .PageNumber }} / {{ .TotalPages }}</span>
+  {{- if .HasNext -}}
+    <a href="{{ .Next.URL }}">older →</a>
+  {{- else -}}
+    <span class="disabled">older →</span>
+  {{- end -}}
+</nav>
+{{- end -}}

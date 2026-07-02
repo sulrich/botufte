@@ -1,0 +1,52 @@
+{{- define "content" -}}
+  {{- $df := .Site.Params.dateFormat | default "02-Jan-2006" -}}
+  {{- /* toc is controlled by front matter, falling back to the site default
+        (params.page.toc.enable). the `toc` key may be a bool (toc: true) or a
+        loveit-style map (toc: {enable: true}). still requires headings. */ -}}
+  {{- $tocOn := false -}}
+  {{- with .Site.Params.page.toc }}{{ $tocOn = index . "enable" }}{{ end -}}
+  {{- if isset .Params "toc" -}}
+    {{- $t := .Params.toc -}}
+    {{- if reflect.IsMap $t }}{{ $tocOn = index $t "enable" }}{{ else }}{{ $tocOn = $t }}{{ end -}}
+  {{- end -}}
+  {{- $showToc := and $tocOn (strings.Contains .TableOfContents "<a ") -}}
+
+  <div class="single-layout{{ if not $showToc }} no-toc{{ end }}">
+    {{- if $showToc -}}
+      <aside class="toc-rail" aria-label="table of contents">
+        <div class="toc-title">contents</div>
+        {{ .TableOfContents }}
+      </aside>
+    {{- end -}}
+
+    <article class="single">
+      <h1 class="single-title">{{ .Title | lower }}</h1>
+      {{- with .Params.subtitle }}<p class="single-subtitle">{{ . }}</p>{{ end -}}
+
+      {{- if ne .Params.hidemeta true -}}
+      <div class="post-meta">
+        <div class="post-meta-line">
+          {{- with .PublishDate }}<span>{{ partial "icon.html" "calendar" }} <time datetime="{{ .Format "2006-01-02" }}">{{ .Format $df }}</time></span>{{ end -}}
+        </div>
+      </div>
+      {{- end -}}
+
+      {{- with .Params.featuredimage -}}
+        <div class="featured-image"><img src="{{ . }}" alt="{{ $.Title }}"></div>
+      {{- end -}}
+
+      {{- if $showToc -}}
+        <details class="toc-inline">
+          <summary>contents</summary>
+          {{ .TableOfContents }}
+        </details>
+      {{- end -}}
+
+      <div class="content" id="content">
+        {{- .Content -}}
+      </div>
+
+      {{- partial "single/footer.html" . -}}
+    </article>
+  </div>
+{{- end -}}

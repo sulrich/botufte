@@ -1,0 +1,47 @@
+// ==========================================================================
+// search: header button toggles a dropdown panel (lunr, client-side)
+// ==========================================================================
+
+.search { position: relative; display: inline-flex; }
+
+.search-panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: #{"min(90vw, 28rem)"};
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 0.6rem;
+  z-index: 50;
+}
+
+#search-input {
+  width: 100%;
+  font-family: $font-body;
+  font-size: 0.95rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--fg);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  &:focus { outline: none; border-color: var(--link); }
+}
+
+.search-results {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-height: 60vh;
+  overflow-y: auto;
+  &:empty { display: none; }
+  li { padding: 0.4rem 0.3rem; border-top: 1px solid var(--border); }
+  li:first-child { border-top: 0; }
+  a { color: var(--fg); display: block; &:hover { color: var(--link); text-decoration: none; } }
+  .result-title { font-size: 0.95rem; }
+  .result-meta { font-size: 0.72rem; color: var(--fg-secondary); }
+  .result-snippet { font-size: 0.78rem; color: var(--fg-secondary); margin-top: 0.15rem; }
+  em { color: var(--link); font-style: normal; background: var(--mark); }
+  .search-empty { color: var(--fg-secondary); font-size: 0.85rem; padding: 0.3rem; }
+}

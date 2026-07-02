@@ -1,0 +1,81 @@
+// ==========================================================================
+// single/article: tufte 3-column layout
+//   [ left toc rail ] [ text column (measure) + right note gutter ]
+// notes/figures float into the right gutter (see _sidenote.scss).
+// ==========================================================================
+
+$main-w: $measure + $gap + $margin-col; // text column + right note gutter
+
+.single-layout {
+  display: grid;
+  grid-template-columns: $toc-col minmax(0, #{$main-w});
+  gap: $gap;
+  justify-content: center;
+  // reset the narrow-page centering the container applies to .list/.home
+  max-width: none;
+}
+.single-layout.no-toc {
+  grid-template-columns: minmax(0, #{$main-w});
+}
+
+// left toc rail (scrollspy wired in theme.js)
+.toc-rail {
+  position: sticky;
+  top: $header-height + 0.75rem;
+  align-self: start;
+  max-height: calc(100vh - #{$header-height} - 1.5rem);
+  overflow-y: auto;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  .toc-title { color: var(--fg-secondary); text-transform: lowercase; margin-bottom: 0.4rem; }
+  nav ul { list-style: none; margin: 0; padding-left: 0.6rem; }
+  nav > ul { padding-left: 0; }
+  a {
+    color: var(--fg-secondary);
+    display: block;
+    padding: 0.1rem 0;
+    border-left: 2px solid transparent;
+    padding-left: 0.5rem;
+    &:hover { color: var(--link); text-decoration: none; }
+    &.active { color: var(--link); border-left-color: var(--link); }
+  }
+}
+
+// the article column; text blocks are held to the measure, leaving the gutter
+.single { min-width: 0; }
+.single > * { max-width: $measure; }
+.single .content { max-width: $measure; }
+
+.single-title { margin-top: 0.5rem; }
+.single-subtitle { color: var(--fg-secondary); font-size: 1.05rem; font-weight: 400; margin-top: 0; }
+
+.post-meta {
+  color: var(--fg-secondary);
+  font-size: 0.8rem;
+  margin: 0.4rem 0 1.5rem;
+  .post-meta-line { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  a { color: var(--fg-secondary); &:hover { color: var(--link); } }
+  svg { width: 0.9rem; height: 0.9rem; vertical-align: -1px; }
+}
+
+.content {
+  a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; }
+  h2, h3, h4 { scroll-margin-top: $header-height + 0.5rem; }
+}
+
+.featured-image img { border-radius: $radius; }
+
+// inline toc (shown only when the grid collapses)
+.toc-inline { display: none; }
+.toc-inline summary { cursor: pointer; color: var(--fg-secondary); }
+
+// ---- responsive: collapse to single column ----
+@media (max-width: $bp-margin) {
+  .single-layout, .single-layout.no-toc {
+    grid-template-columns: minmax(0, $narrow-w);
+    justify-content: center;
+  }
+  .toc-rail { display: none; }
+  .toc-inline { display: block; margin: 0 0 1.5rem; }
+  .single > *, .single .content { max-width: none; }
+}

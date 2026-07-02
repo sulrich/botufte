@@ -1,0 +1,26 @@
+{{- define "content" -}}
+  {{- $profile := .Site.Params.home.profile -}}
+  {{- $posts := .Site.Params.home.posts -}}
+
+  <div class="home">
+    {{- if ne $profile.enable false -}}
+      {{- partial "home/profile.html" . -}}
+    {{- end -}}
+
+    {{- with .Content -}}
+      <div class="content">{{ . }}</div>
+    {{- end -}}
+
+    {{- /* commingled stream: posts + til + links */ -}}
+    {{- if ne $posts.enable false -}}
+      {{- $sections := $posts.sections | default (slice "posts") -}}
+      {{- $pages := where .Site.RegularPages "Type" "in" $sections -}}
+      {{- $pages = where $pages "Params.hiddenfromhomepage" "!=" true -}}
+      {{- $paginated := .Paginate $pages ($posts.paginate | default 10) -}}
+      {{- range $paginated.Pages -}}
+        {{- partial "summary.html" . -}}
+      {{- end -}}
+      {{- partial "pagination.html" $paginated -}}
+    {{- end -}}
+  </div>
+{{- end -}}

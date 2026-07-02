@@ -1,0 +1,4 @@
+{{- /* fenced ```mermaid blocks -> a .mermaid node + flag the page so baseof
+      lazy-loads the mermaid runtime (see _partials/mermaid.html). */ -}}
+<pre class="mermaid">{{ .Inner | htmlEscape | safeHTML }}</pre>
+{{- .Page.Store.Set "hasMermaid" true -}}

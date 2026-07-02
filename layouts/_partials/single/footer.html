@@ -1,0 +1,27 @@
+{{- $f := .Site.Params.footer -}}
+<div class="post-footer">
+  {{- with .Params.tags -}}
+    <div class="post-tags">
+      {{- range . -}}
+        {{- with $.Site.GetPage (printf "/tags/%s" (. | urlize)) -}}
+          <a href="{{ .RelPermalink }}">{{ .Title | lower }}</a>
+        {{- else -}}
+          <a href="{{ printf "/tags/%s/" (. | urlize) }}">{{ . | lower }}</a>
+        {{- end -}}
+      {{- end -}}
+    </div>
+  {{- end -}}
+
+  {{- if or .PrevInSection .NextInSection -}}
+    <nav class="post-nav">
+      {{- with .PrevInSection -}}
+        <a href="{{ .RelPermalink }}">← {{ .Title | lower }}</a>
+      {{- else -}}<span></span>{{- end -}}
+      {{- with .NextInSection -}}
+        <a href="{{ .RelPermalink }}">{{ .Title | lower }} →</a>
+      {{- else -}}<span></span>{{- end -}}
+    </nav>
+  {{- end -}}
+
+  {{- with $f.license -}}<div class="post-license">{{ . | safeHTML }}</div>{{- end -}}
+</div>

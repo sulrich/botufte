@@ -1,0 +1,25 @@
+{{- /* image with optional caption. margin="true" renders a tufte margin figure
+      (styled in _sidenote.scss). named or positional params:
+      {{< image src="..." alt="..." caption="..." margin="true" >}}
+      {{< image "src" "alt" "caption" >}} */ -}}
+{{- $src := cond .IsNamedParams (.Get "src") (.Get 0) -}}
+{{- $alt := cond .IsNamedParams (.Get "alt") (.Get 1) -}}
+{{- $caption := cond .IsNamedParams (.Get "caption") (.Get 2) -}}
+{{- $margin := and .IsNamedParams (in (slice "true" true "1") (.Get "margin")) -}}
+
+{{- /* resolve a page resource if src isn't absolute/remote */ -}}
+{{- if and $src (not (or (hasPrefix $src "http") (hasPrefix $src "/"))) -}}
+  {{- with .Page.Resources.GetMatch $src -}}{{ $src = .RelPermalink }}{{- end -}}
+{{- end -}}
+
+{{- if $margin -}}
+  <figure class="margin-figure">
+    <img src="{{ $src }}"{{ with $alt }} alt="{{ . }}"{{ end }} loading="lazy">
+    {{- with $caption }}<figcaption>{{ . | $.Page.RenderString }}</figcaption>{{ end -}}
+  </figure>
+{{- else -}}
+  <figure>
+    <img src="{{ $src }}"{{ with $alt }} alt="{{ . }}"{{ end }} loading="lazy">
+    {{- with $caption }}<figcaption>{{ . | $.Page.RenderString }}</figcaption>{{ end -}}
+  </figure>
+{{- end -}}

@@ -1,0 +1,61 @@
+// ==========================================================================
+// site footer + profile (home) + post footer
+// ==========================================================================
+
+.footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  color: var(--fg-secondary);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1.25rem;
+  a { color: var(--fg-secondary); &:hover { color: var(--link); } }
+}
+
+// home profile -----------------------------------------------------------
+.profile {
+  text-align: center;
+  margin: 1.5rem 0 2.5rem;
+  .profile-avatar {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .profile-title { font-size: 1.5rem; margin: 0.8rem 0 0.2rem; }
+  .profile-subtitle { color: var(--fg-secondary); margin: 0; }
+}
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  margin: 0.9rem 0 0;
+  a { color: var(--fg-secondary); &:hover { color: var(--link); } }
+  svg { width: 1.3rem; height: 1.3rem; }
+}
+
+// single post footer -----------------------------------------------------
+.post-footer {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+}
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  a {
+    border: 1px solid var(--border);
+    border-radius: $radius;
+    padding: 0.05rem 0.45rem;
+    text-transform: lowercase;
+  }
+}
+.post-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
