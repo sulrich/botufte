@@ -4,13 +4,18 @@
 // token colors carried from the loveit fork; emitted via @each for both themes.
 // ==========================================================================
 
-code, pre, kbd, samp { font-family: $font-body; }
+// JetBrains Mono for code; ligatures off (no "calt"/"liga" glyph substitution)
+code, pre, kbd, samp {
+  font-family: $font-code;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
 
 // inline code
 :not(pre) > code {
   background: var(--code-bg);
   color: var(--code-fg);
-  font-size: 0.9em;
+  font-size: 0.85em;
   padding: 0.1em 0.35em;
   border-radius: $radius;
 }
@@ -21,21 +26,15 @@ code, pre, kbd, samp { font-family: $font-body; }
   margin: 1.5rem 0;
   background: var(--code-bg);
   border-radius: $radius;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   overflow: hidden;
   pre {
     margin: 0;
     padding: 0.8rem 1rem;
     overflow-x: auto;
-    line-height: 1.45;
+    line-height: 1.5;
     background: transparent;
   }
-  // line-number table (lineNumbersInTable = true)
-  .lntable { border: 0; width: auto; margin: 0; }
-  .lntable td, .lntable th { border: 0; padding: 0; }
-  .lntd:first-child { width: 1%; }
-  .ln, .lnt { color: var(--fg-secondary); opacity: 0.55; user-select: none; }
-  table td { padding: 0; }
 }
 
 // copy button (wired in stage 4)
@@ -57,6 +56,37 @@ code, pre, kbd, samp { font-family: $font-body; }
 .highlight:hover .code-copy { opacity: 1; }
 // touch devices have no hover — keep the button visible
 @media (hover: none) { .code-copy { opacity: 1; } }
+
+// ---- embedded github gists -----------------------------------------------
+// gist.js injects its own stylesheet after ours, so overrides need !important.
+// goal: no line numbers, smaller JetBrains Mono, tighter footer.
+.gist {
+  font-size: 0.78rem !important;
+
+  .blob-num,           // line-number gutter
+  .blob-num-hunk { display: none !important; }
+
+  .blob-code,
+  .blob-code-inner,
+  .pl-c1, .pl-s, .pl-k, .pl-en, .pl-e {
+    font-family: $font-code !important;
+    font-variant-ligatures: none !important;
+    font-feature-settings: "liga" 0, "calt" 0 !important;
+  }
+
+  .blob-code, .blob-code-inner {
+    font-size: 0.78rem !important;
+    line-height: 1.5 !important;
+    padding-left: 0.6rem !important;
+  }
+
+  // footer ("view raw / this gist / … lines / … kb")
+  .gist-meta {
+    font-size: 0.68rem !important;
+    padding: 0.3rem 0.6rem !important;
+    line-height: 1.35 !important;
+  }
+}
 
 // ---- token colors --------------------------------------------------------
 $chroma-light: (
