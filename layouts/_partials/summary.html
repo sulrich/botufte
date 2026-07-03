@@ -1,9 +1,9 @@
 {{- /* one entry in a paginated list / home stream. arg is the page. */ -}}
 {{- $df := .Site.Params.dateFormat | default "02-Jan-2006" -}}
 <article class="summary">
-  <h2 class="summary-title"><a href="{{ .RelPermalink }}">{{ .Title | lower }}</a></h2>
+  <h2 class="summary-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
   <div class="summary-meta">
-    <a class="section-tag" href="{{ .Section | relLangURL }}">{{ .Section | lower }}</a>
+    <a class="section-tag" href="{{ .Section | relLangURL }}">{{ .Section }}</a>
     <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $df }}</time>
   </div>
   {{- with .Description }}<div class="summary-desc">{{ . }}</div>{{ end -}}

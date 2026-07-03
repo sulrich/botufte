@@ -1,7 +1,7 @@
 {{- /* /books/ — renders _index.md (which embeds the books-table shortcode) */ -}}
 {{- define "content" -}}
   <div class="content-page">
-    <h1 class="list-title">{{ .Title | lower }}</h1>
+    <h1 class="list-title">{{ .Title }}</h1>
     <div class="content" id="content">{{ .Content }}</div>
   </div>
 {{- end -}}

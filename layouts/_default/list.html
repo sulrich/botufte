@@ -2,7 +2,7 @@
   {{- $df := .Site.Params.section.dateFormat | default "02-Jan" -}}
   {{- $paginate := .Site.Params.section.paginate | default 50 -}}
   <div class="list">
-    <h1 class="list-title">{{ .Title | lower }}</h1>
+    <h1 class="list-title">{{ .Title }}</h1>
 
     {{- with .Content }}<div class="content">{{ . }}</div>{{ end -}}
 
@@ -18,7 +18,7 @@
         {{- range .Pages -}}
           <li>
             <span class="archive-date">{{ .Date.Format $df }}</span>
-            <a href="{{ .RelPermalink }}">{{ .Title | lower }}</a>
+            <a href="{{ .RelPermalink }}">{{ .Title }}</a>
           </li>
         {{- end -}}
       </ul>
