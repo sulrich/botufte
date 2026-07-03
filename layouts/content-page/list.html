@@ -2,7 +2,7 @@
       no child listing (e.g. /misc/). */ -}}
 {{- define "content" -}}
   <article class="single">
-    <h1 class="single-title">{{ .Title | lower }}</h1>
+    <h1 class="single-title">{{ .Title }}</h1>
     <div class="content" id="content">{{ .Content }}</div>
   </article>
 {{- end -}}

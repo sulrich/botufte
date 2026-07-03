@@ -6,7 +6,7 @@
 {{- $title := cond (eq .Title .Site.Title) .Site.Title (printf "%s on %s" .Title .Site.Title) -}}
 {
   "version": "https://jsonfeed.org/version/1.1",
-  "title": {{ $title | lower | jsonify }},
+  "title": {{ $title | jsonify }},
   "home_page_url": {{ .Permalink | jsonify }},
   {{- with .OutputFormats.Get "jsonfeed" }}
   "feed_url": {{ .Permalink | jsonify }},

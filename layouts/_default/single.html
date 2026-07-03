@@ -20,7 +20,7 @@
     {{- end -}}
 
     <article class="single">
-      <h1 class="single-title">{{ .Title | lower }}</h1>
+      <h1 class="single-title">{{ .Title }}</h1>
       {{- with .Params.subtitle }}<p class="single-subtitle">{{ . }}</p>{{ end -}}
 
       {{- if ne .Params.hidemeta true -}}

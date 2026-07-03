@@ -4,9 +4,9 @@
     <div class="post-tags">
       {{- range . -}}
         {{- with $.Site.GetPage (printf "/tags/%s" (. | urlize)) -}}
-          <a href="{{ .RelPermalink }}">{{ .Title | lower }}</a>
+          <a href="{{ .RelPermalink }}">{{ .Title }}</a>
         {{- else -}}
-          <a href="{{ printf "/tags/%s/" (. | urlize) }}">{{ . | lower }}</a>
+          <a href="{{ printf "/tags/%s/" (. | urlize) }}">{{ . }}</a>
         {{- end -}}
       {{- end -}}
     </div>
@@ -15,10 +15,10 @@
   {{- if or .PrevInSection .NextInSection -}}
     <nav class="post-nav">
       {{- with .PrevInSection -}}
-        <a href="{{ .RelPermalink }}">← {{ .Title | lower }}</a>
+        <a href="{{ .RelPermalink }}">← {{ .Title }}</a>
       {{- else -}}<span></span>{{- end -}}
       {{- with .NextInSection -}}
-        <a href="{{ .RelPermalink }}">{{ .Title | lower }} →</a>
+        <a href="{{ .RelPermalink }}">{{ .Title }} →</a>
       {{- else -}}<span></span>{{- end -}}
     </nav>
   {{- end -}}
