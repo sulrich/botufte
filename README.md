@@ -68,7 +68,51 @@ submodules automatically.
 
 ## config the theme reads
 
-`params.home.profile`, `params.home.posts.sections`, `params.social` (keys:
-`GitHub`, `LinkedIn`, `Mastodon`, `Email`, `RSS`),
-`params.search.enable`, `params.page.toc.enable`, `params.footer`, `params.author`,
-`params.dateFormat`, and `[menu.main]` (supports one level of nesting for dropdowns).
+`params.home.profile`, `params.home.posts.sections`, `params.social` (see
+[social links](#social-links) below), `params.search.enable`,
+`params.page.toc.enable`, `params.footer`, `params.author`, `params.dateFormat`,
+and `[menu.main]` (supports one level of nesting for dropdowns).
+
+### social links
+
+`[[params.social]]` is an **ordered array of tables** — icons render on the home
+page profile left-to-right in the order the entries appear. each entry is a
+`service` plus a `value` (`rss` takes no value; it uses the site's rss output):
+
+```toml
+[[params.social]]
+  service = "github"
+  value = "sulrich"
+
+[[params.social]]
+  service = "mastodon"
+  value = "https://social.lol/@sulrich"   # full url — mastodon is federated
+
+[[params.social]]
+  service = "rss"
+```
+
+supported services and the url each `value` builds:
+
+| service                | value is…                    | url |
+| ---------------------- | ---------------------------- | --- |
+| `github`               | username                     | `https://github.com/<value>` |
+| `mastodon`             | full profile url             | `<value>` |
+| `linkedin`             | vanity name                  | `https://www.linkedin.com/in/<value>` |
+| `email`                | address                      | `mailto:<value>` |
+| `rss`                  | *(none)*                     | site rss feed |
+| `strava`               | athlete id                   | `https://www.strava.com/athletes/<value>` |
+| `bluesky` (`bsky`)     | handle                       | `https://bsky.app/profile/<value>` |
+| `discogs`              | username                     | `https://www.discogs.com/user/<value>` |
+| `threads` (`threads.net`) | username                  | `https://www.threads.net/@<value>` |
+| `instagram`            | username                     | `https://www.instagram.com/<value>` |
+| `youtube`              | channel handle               | `https://www.youtube.com/@<value>` |
+| `lastfm` (`last.fm`)   | username                     | `https://www.last.fm/user/<value>` |
+| `signal`               | username                     | `https://signal.me/#u/<value>` |
+| `flickr`               | username                     | `https://www.flickr.com/photos/<value>` |
+
+icons are font awesome brands, except `email`/`rss` (solid) and `discogs`, which
+has no font awesome brand icon and borrows `fa-record-vinyl`. to add a service,
+add a row to `$defs` in `layouts/_partials/social.html`: `url` is a printf
+pattern (`%s` = the value) and `icon` is the font awesome class. an unknown
+`service` logs a warning and is skipped.
