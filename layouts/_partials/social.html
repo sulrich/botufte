@@ -1,23 +1,45 @@
-{{- /* social links from [params.social]; simple explicit mapping to keep
-      the set small. icons are font awesome (loaded via cdn in head/link.html);
-      add cases here as needed. */ -}}
-{{- $s := .Site.Params.social -}}
+{{- /* social links from [[params.social]]. this is an ORDERED array of tables,
+      so icons render left-to-right in the order they appear in the config. each
+      entry is { service = "github", value = "sulrich" }; unknown services warn
+      and are skipped. rss takes no value (it uses the site's rss output).
+
+      icons are font awesome (loaded via cdn in head/link.html). to add a service,
+      add a row to $defs below: "url" is a printf pattern (%s = the value), "icon"
+      is the font awesome class. note: discogs has no font awesome brand icon, so
+      it borrows fa-record-vinyl. */ -}}
+{{- $defs := dict
+  "github"    (dict "icon" "fa-brands fa-github"      "url" "https://github.com/%s")
+  "mastodon"  (dict "icon" "fa-brands fa-mastodon"    "url" "%s")
+  "linkedin"  (dict "icon" "fa-brands fa-linkedin"    "url" "https://www.linkedin.com/in/%s")
+  "email"     (dict "icon" "fa-solid fa-envelope"     "url" "mailto:%s")
+  "strava"    (dict "icon" "fa-brands fa-strava"      "url" "https://www.strava.com/athletes/%s")
+  "bluesky"   (dict "icon" "fa-brands fa-bluesky"     "url" "https://bsky.app/profile/%s")
+  "discogs"   (dict "icon" "fa-solid fa-record-vinyl" "url" "https://www.discogs.com/user/%s")
+  "threads"   (dict "icon" "fa-brands fa-threads"     "url" "https://www.threads.net/@%s")
+  "instagram" (dict "icon" "fa-brands fa-instagram"   "url" "https://www.instagram.com/%s")
+  "youtube"   (dict "icon" "fa-brands fa-youtube"     "url" "https://www.youtube.com/@%s")
+  "lastfm"    (dict "icon" "fa-brands fa-lastfm"      "url" "https://www.last.fm/user/%s")
+  "signal"    (dict "icon" "fa-brands fa-signal-messenger" "url" "https://signal.me/#u/%s")
+  "flickr"    (dict "icon" "fa-brands fa-flickr"      "url" "https://www.flickr.com/photos/%s")
+-}}
+{{- $aliases := dict "bsky" "bluesky" "threads.net" "threads" "last.fm" "lastfm" -}}
 <div class="social-links">
-  {{- with $s.GitHub -}}
-    <a href="https://github.com/{{ . }}" rel="me noopener" target="_blank" title="github" aria-label="github"><i class="fa-brands fa-github" aria-hidden="true"></i></a>
-  {{- end -}}
-  {{- with $s.LinkedIn -}}
-    <a href="https://www.linkedin.com/in/{{ . }}" rel="me noopener" target="_blank" title="linkedin" aria-label="linkedin"><i class="fa-brands fa-linkedin" aria-hidden="true"></i></a>
-  {{- end -}}
-  {{- with $s.Mastodon -}}
-    <a href="{{ . }}" rel="me noopener" target="_blank" title="mastodon" aria-label="mastodon"><i class="fa-brands fa-mastodon" aria-hidden="true"></i></a>
-  {{- end -}}
-  {{- with $s.Email -}}
-    <a href="mailto:{{ . }}" title="email" aria-label="email"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
-  {{- end -}}
-  {{- if $s.RSS -}}
-    {{- with $.Site.Home.OutputFormats.Get "RSS" -}}
-      <a href="{{ .RelPermalink }}" title="rss" aria-label="rss"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
+  {{- range .Site.Params.social -}}
+    {{- $svc := .service | lower -}}
+    {{- $svc = index $aliases $svc | default $svc -}}
+    {{- if eq $svc "rss" -}}
+      {{- with $.Site.Home.OutputFormats.Get "RSS" -}}
+        <a href="{{ .RelPermalink }}" title="rss" aria-label="rss"><i class="fa-solid fa-rss" aria-hidden="true"></i></a>
+      {{- end -}}
+    {{- else -}}
+      {{- $d := index $defs $svc -}}
+      {{- if $d -}}
+        {{- $href := printf (index $d "url") .value -}}
+        {{- $external := ne $svc "email" -}}
+        <a href="{{ $href }}"{{ if $external }} rel="me noopener" target="_blank"{{ end }} title="{{ $svc }}" aria-label="{{ $svc }}"><i class="{{ index $d "icon" }}" aria-hidden="true"></i></a>
+      {{- else -}}
+        {{- warnf "social.html: unknown service %q (skipped)" $svc -}}
+      {{- end -}}
     {{- end -}}
   {{- end -}}
 </div>
