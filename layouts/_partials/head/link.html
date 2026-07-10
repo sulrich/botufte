@@ -13,12 +13,26 @@
   <link rel="alternate" type="application/feed+json" href="{{ .RelPermalink }}" title="{{ $.Site.Title }}">
 {{- end }}
 
+{{- /* preload the primary body font (iA Writer Duo regular) so it starts
+      downloading before the css parses — shortens the font-swap flash on the
+      above-the-fold text. only the regular weight; bold/italic/mono load on
+      demand. crossorigin is required even same-origin for font preloads. */ -}}
+<link rel="preload" href="/fonts/iAWriterDuoS-Regular.woff2" as="font" type="font/woff2" crossorigin>
+
 {{- /* font awesome (brands + solid) — social icons in the home profile.
       external CDN dependency; served with SRI so a tampered file won't load.
-      pin the version here when bumping. */ -}}
+      loaded non-render-blocking (media=print + onload swap) so it never delays
+      first paint — the ~6 social icons pop in after the page renders. noscript
+      fallback keeps them for scripting-disabled clients. pin the version here
+      when bumping. */ -}}
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
       integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
-      crossorigin="anonymous" referrerpolicy="no-referrer">
+      crossorigin="anonymous" referrerpolicy="no-referrer"
+      media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
 
 {{- /* stylesheet: precompiled css committed in the theme (assets/css/style.css),
       regenerated from style.scss via `make css` — see the theme README. hugo just
