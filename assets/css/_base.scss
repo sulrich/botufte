@@ -42,6 +42,27 @@
   font-display: swap;
 }
 
+// font awesome (loaded from the cdn — see head/link.html) ships its @font-face
+// with font-display:block, which hides the social icons for up to 3s. we don't
+// repackage FA; instead we redeclare the two faces we actually use with matching
+// descriptors + font-display:swap. an identical later @font-face overrides the
+// earlier one, and this sheet loads after the FA css, so swap wins. pin the URLs
+// to the same version as the <link> in head/link.html when bumping FA.
+@font-face {
+  font-family: "Font Awesome 6 Free";
+  src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-solid-900.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Font Awesome 6 Brands";
+  src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/webfonts/fa-brands-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html {

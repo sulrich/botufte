@@ -13,11 +13,13 @@
   <link rel="alternate" type="application/feed+json" href="{{ .RelPermalink }}" title="{{ $.Site.Title }}">
 {{- end }}
 
-{{- /* preload the primary body font (iA Writer Duo regular) so it starts
-      downloading before the css parses — shortens the font-swap flash on the
-      above-the-fold text. only the regular weight; bold/italic/mono load on
-      demand. crossorigin is required even same-origin for font preloads. */ -}}
+{{- /* preload the two above-the-fold body-font weights so they download in
+      parallel with the css instead of being discovered after it parses.
+      regular = body copy; bold = every heading incl. the home <h1> profile
+      title, which is the mobile LCP element. italic/mono stay on-demand.
+      crossorigin is required even same-origin for font preloads. */ -}}
 <link rel="preload" href="/fonts/iAWriterDuoS-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/iAWriterDuoS-Bold.woff2" as="font" type="font/woff2" crossorigin>
 
 {{- /* font awesome (brands + solid) — social icons in the home profile.
       external CDN dependency; served with SRI so a tampered file won't load.
