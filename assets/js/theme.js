@@ -32,7 +32,9 @@
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
-    onScroll();
+    // defer the initial scrollY read to the next frame so it doesn't force a
+    // synchronous layout while the defer scripts are still running (reflow).
+    requestAnimationFrame(onScroll);
   }
 
   // ---- mobile menu ----

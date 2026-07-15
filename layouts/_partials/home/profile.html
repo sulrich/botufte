@@ -2,7 +2,7 @@
 <div class="profile">
   {{- $avatar := $p.avatarURL -}}
   {{- with $avatar -}}
-    <img class="profile-avatar" src="{{ . }}" alt="{{ $p.title | default $.Site.Title }}" width="128" height="128">
+    <img class="profile-avatar" src="{{ . }}" alt="{{ $p.title | default $.Site.Title }}" width="128" height="128" fetchpriority="high" decoding="async">
   {{- end -}}
   {{- with $p.title }}<h1 class="profile-title">{{ . | safeHTML }}</h1>{{ end -}}
   {{- with $p.subtitle }}<p class="profile-subtitle">{{ . | safeHTML }}</p>{{ end -}}
