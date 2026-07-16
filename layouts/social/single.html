@@ -1,0 +1,32 @@
+{{- define "content" -}}
+  {{- $df := .Site.Params.dateFormat | default "02-Jan-2006" -}}
+  <article class="single social-post">
+    <h1 class="single-title">{{ .Title }}</h1>
+
+    <div class="post-meta">
+      <div class="post-meta-line">
+        <span>{{ partial "icon.html" "calendar" }} <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $df }}</time></span>
+        {{- with .Params.original_url }} · <a href="{{ . }}" rel="noopener nofollow">original</a>{{ end -}}
+      </div>
+    </div>
+
+    <div class="content" id="content">
+      {{- .Content -}}
+    </div>
+
+    {{- /* footer nav: previous post, back to platform list, next post */ -}}
+    <div class="post-footer">
+      <nav class="post-nav social-nav">
+        {{- with .PrevInSection -}}
+          <a href="{{ .RelPermalink }}">← {{ .Title }}</a>
+        {{- else -}}<span></span>{{- end -}}
+        {{- with .CurrentSection -}}
+          <a href="{{ .RelPermalink }}">all {{ .Title }}</a>
+        {{- end -}}
+        {{- with .NextInSection -}}
+          <a href="{{ .RelPermalink }}">{{ .Title }} →</a>
+        {{- else -}}<span></span>{{- end -}}
+      </nav>
+    </div>
+  </article>
+{{- end -}}

@@ -1,0 +1,36 @@
+{{- define "content" -}}
+  {{- $df := .Site.Params.section.dateFormat | default "02-Jan" -}}
+  <div class="list">
+    <h1 class="list-title">{{ .Title }}</h1>
+
+    {{- with .Content }}<div class="content">{{ . }}</div>{{ end -}}
+
+    {{- if .Sections -}}
+      {{- /* /social/ landing: link to each platform with a post count */ -}}
+      <ul class="archive-list social-platforms">
+        {{- range .Sections.ByTitle -}}
+          <li>
+            <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+            <span class="archive-date">{{ len .Pages }} posts</span>
+          </li>
+        {{- end -}}
+      </ul>
+    {{- else -}}
+      {{- /* platform page: posts grouped by year (mirrors _default/list.html) */ -}}
+      {{- $paginate := .Site.Params.section.paginate | default 50 -}}
+      {{- $paginated := .Paginate .Pages $paginate -}}
+      {{- range $paginated.Pages.GroupByDate "2006" -}}
+        <h2 class="archive-year">{{ .Key }}</h2>
+        <ul class="archive-list">
+          {{- range .Pages -}}
+            <li>
+              <span class="archive-date">{{ .Date.Format $df }}</span>
+              <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+            </li>
+          {{- end -}}
+        </ul>
+      {{- end -}}
+      {{- partial "pagination.html" $paginated -}}
+    {{- end -}}
+  </div>
+{{- end -}}
