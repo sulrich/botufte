@@ -1,0 +1,72 @@
+@use "variables" as *;
+
+// ==========================================================================
+// social archive: post bodies + multi-image carousel
+// ==========================================================================
+
+.social-post {
+  .post-text { margin-bottom: 1rem; }
+
+  .post-location {
+    color: var(--fg-secondary);
+    font-size: .9rem;
+    margin: .25rem 0 1rem;
+  }
+
+  // lone image/video: rounded, and don't let a tall one dominate the column
+  .content > img,
+  .content > video {
+    border-radius: 8px;
+    max-height: 40rem;
+    object-fit: contain;
+  }
+
+  // quoted tweet
+  .quoted-tweet {
+    border-left: 3px solid var(--border);
+    margin: 1rem 0;
+    padding: .3rem 0 .3rem 1rem;
+    color: var(--fg);
+
+    footer {
+      margin-top: .4rem;
+      color: var(--fg-secondary);
+      font-size: .9rem;
+    }
+  }
+}
+
+// ---- multi-image carousel (pure CSS scroll-snap) -------------------------
+.carousel {
+  display: flex;
+  gap: .6rem;
+  margin: 1rem 0;
+  padding-bottom: .6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+}
+
+.carousel-slide {
+  flex: 0 0 92%;             // a sliver of the next image peeks in, hinting scroll
+  scroll-snap-align: center;
+  aspect-ratio: 4 / 3;
+  background: var(--code-bg);
+  border-radius: 8px;
+  overflow: hidden;
+
+  img,
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;     // preserve the whole image, letterboxed on the box
+    display: block;
+  }
+}
