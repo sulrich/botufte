@@ -47,7 +47,8 @@ $main-w: $measure + $gap + $margin-col; // text column + right note gutter
 .single > * { max-width: $measure; }
 .single .content { max-width: $measure; }
 
-.single-title { margin-top: 0.5rem; }
+// title spans the full text column + right note gutter (not just the measure)
+.single-title { margin-top: 0.5rem; max-width: $main-w; }
 .single-subtitle { color: var(--fg-secondary); font-size: 1.05rem; font-weight: 400; margin-top: 0; }
 
 .post-meta {
