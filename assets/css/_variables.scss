@@ -41,12 +41,12 @@ $font-body:       "iA Writer Duo", ui-monospace, "SF Mono", "SFMono-Regular", Me
 $font-code:       "JetBrains Mono", ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
 $font-size:       17px;
 $line-height:     1.6;
-$measure:         40rem;     // main text column width
+$measure:         47rem;     // main text column width
 $margin-col:      14rem;     // right gutter for sidenotes / margin figures
 $toc-col:         11rem;     // left toc rail
 $gap:             2rem;      // grid gutter
-$page-w:          71rem;     // global content width (header/footer/single grid)
-$narrow-w:        44rem;     // home/list/single-page reading width
+$page-w:          79rem;     // global content width (header/footer/single grid)
+$narrow-w:        50rem;     // home/list/single-page reading width
 $bp-margin:       1000px;    // below this, margins collapse inline
 $header-height:   3.25rem;
 $radius:          4px;
