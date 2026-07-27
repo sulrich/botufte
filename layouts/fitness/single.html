@@ -1,0 +1,119 @@
+{{- define "content" -}}
+  {{- $df := .Site.Params.dateFormat | default "02-Jan-2006" -}}
+  {{- if .Params.summary_polyline }}{{ .Store.Set "hasMap" true }}{{ end -}}
+
+  <article class="single fitness-activity">
+    <h1 class="single-title">{{ .Title }}</h1>
+
+    <div class="post-meta">
+      <div class="post-meta-line">
+        <span>{{ partial "icon.html" "calendar" }} <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $df }}</time></span>
+        {{- with .Params.sport_type }} · <span class="fit-sport">{{ . | replaceRE "([a-z0-9])([A-Z])" "$1 $2" | lower }}</span>{{ end -}}
+        {{- with .Params.location }} · {{ . }}{{ end -}}
+        {{- with .Params.strava_id }} · <a href="https://www.strava.com/activities/{{ . }}" rel="noopener nofollow">strava</a>{{ end -}}
+      </div>
+    </div>
+
+    {{- /* ---- stats (each row rendered only when its value is present) ---- */ -}}
+    <dl class="fit-stats">
+      {{- with .Params.distance_mi }}<div class="fit-stat"><dt>distance</dt><dd>{{ printf "%.2f mi" . }}</dd></div>{{ end }}
+      {{- with .Params.moving_time }}<div class="fit-stat"><dt>moving</dt><dd>{{ . }}</dd></div>{{ end }}
+      {{- with .Params.elapsed_time }}<div class="fit-stat"><dt>elapsed</dt><dd>{{ . }}</dd></div>{{ end }}
+      {{- with .Params.elevation_gain_ft }}<div class="fit-stat"><dt>elevation</dt><dd>{{ printf "%d ft" (int .) }}</dd></div>{{ end }}
+      {{- with .Params.avg_pace }}<div class="fit-stat"><dt>pace</dt><dd>{{ printf "%s /mi" . }}</dd></div>{{ end }}
+      {{- with .Params.avg_speed_mph }}<div class="fit-stat"><dt>avg speed</dt><dd>{{ printf "%.1f mph" . }}</dd></div>{{ end }}
+      {{- with .Params.avg_hr }}<div class="fit-stat"><dt>avg hr</dt><dd>{{ printf "%d bpm" (int .) }}</dd></div>{{ end }}
+      {{- with .Params.max_hr }}<div class="fit-stat"><dt>max hr</dt><dd>{{ printf "%d bpm" (int .) }}</dd></div>{{ end }}
+      {{- with .Params.avg_watts }}<div class="fit-stat"><dt>avg power</dt><dd>{{ printf "%.0f W" . }}</dd></div>{{ end }}
+      {{- with .Params.calories }}<div class="fit-stat"><dt>calories</dt><dd>{{ printf "%d" (int .) }}</dd></div>{{ end }}
+      {{- with .Params.gear }}<div class="fit-stat"><dt>gear</dt><dd>{{ . }}</dd></div>{{ end }}
+    </dl>
+
+    {{- /* ---- photo carousel ---- */ -}}
+    {{- with .Params.photos }}
+    {{- $page := $ -}}
+    <div class="fit-carousel" data-count="{{ len . }}">
+      <div class="fit-carousel-track">
+        {{- range . }}
+        {{- $img := $page.Resources.GetMatch . }}
+        {{- with $img }}
+        <figure class="fit-slide"><img src="{{ .RelPermalink }}" loading="lazy" alt=""></figure>
+        {{- end }}
+        {{- end }}
+      </div>
+      {{- if gt (len .) 1 }}
+      <button class="fit-carousel-btn prev" aria-label="previous">‹</button>
+      <button class="fit-carousel-btn next" aria-label="next">›</button>
+      {{- end }}
+    </div>
+    {{- end }}
+
+    {{- /* ---- route map ---- */ -}}
+    {{- with .Params.summary_polyline }}
+    <div id="fit-map" class="fit-map" data-polyline="{{ . }}"></div>
+    {{- end }}
+
+    {{- /* ---- structured workout ---- */ -}}
+    {{- with .Params.workout }}
+    <table class="fit-workout">
+      <thead><tr><th>exercise</th><th>sets</th></tr></thead>
+      <tbody>
+        {{- range .exercises }}
+        <tr>
+          <td>{{ .name }}</td>
+          <td>
+          {{- range $i, $g := .sets }}{{ if $i }}, {{ end -}}
+            {{- if gt (int $g.count) 1 }}{{ $g.count }}&times;{{ end -}}
+            {{- if $g.duration }}{{ $g.duration }}
+            {{- else }}{{ $g.reps }}{{ with $g.weight_lb }} @ {{ printf "%g" . }}&nbsp;lb{{ end }}
+            {{- end -}}
+          {{- else }}&mdash;{{ end -}}
+          </td>
+        </tr>
+        {{- end }}
+      </tbody>
+    </table>
+    {{- end }}
+
+    {{- /* ---- notes / description ---- */ -}}
+    {{- with .Content }}
+    <div class="content fit-notes" id="content">{{ . }}</div>
+    {{- end }}
+
+    <div class="post-footer">
+      <nav class="post-nav">
+        {{- with .PrevInSection }}<a href="{{ .RelPermalink }}">← {{ .Title }}</a>{{ else }}<span></span>{{ end -}}
+        {{- with .CurrentSection }}<a href="{{ .RelPermalink }}">all {{ .Title }}</a>{{ end -}}
+        {{- with .NextInSection }}<a href="{{ .RelPermalink }}">{{ .Title }} →</a>{{ else }}<span></span>{{ end -}}
+      </nav>
+    </div>
+  </article>
+
+  <style>
+    .fitness-activity .fit-sport { color: var(--fg-secondary); }
+    .fit-stats { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin: 1rem 0 1.25rem; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 6px; }
+    .fit-stat { margin: 0; }
+    .fit-stat dt { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--fg-secondary); }
+    .fit-stat dd { margin: 0; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .fit-carousel { position: relative; margin: 1.25rem 0; }
+    .fit-carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0.5rem; border-radius: 6px; }
+    .fit-slide { flex: 0 0 100%; scroll-snap-align: center; margin: 0; }
+    .fit-slide img { width: 100%; height: auto; border-radius: 6px; display: block; }
+    .fit-carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.6rem; line-height: 1; width: 2rem; height: 2.6rem; cursor: pointer; border-radius: 4px; }
+    .fit-carousel-btn.prev { left: 0.4rem; } .fit-carousel-btn.next { right: 0.4rem; }
+    .fit-map { width: 100%; height: 360px; border: 1px solid var(--border); border-radius: 6px; margin: 1.25rem 0; }
+    .fit-workout { border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }
+    .fit-workout th, .fit-workout td { border: 1px solid var(--border); padding: 0.35rem 0.7rem; text-align: left; }
+    .fit-workout thead th { background: var(--table-thead); }
+  </style>
+  <script>
+    (() => {
+      const c = document.querySelector('.fit-carousel');
+      if (!c) return;
+      const track = c.querySelector('.fit-carousel-track');
+      const step = () => track.clientWidth;
+      c.querySelector('.prev')?.addEventListener('click', () => track.scrollBy({left: -step(), behavior: 'smooth'}));
+      c.querySelector('.next')?.addEventListener('click', () => track.scrollBy({left:  step(), behavior: 'smooth'}));
+    })();
+  </script>
+{{- end -}}

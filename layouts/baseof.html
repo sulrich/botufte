@@ -31,5 +31,8 @@
 
   {{- /* mermaid: only on pages that actually contain a diagram */ -}}
   {{- if .Store.Get "hasMermaid" }}{{ partial "mermaid.html" . }}{{ end -}}
+
+  {{- /* leaflet: only on activity pages that have a route polyline */ -}}
+  {{- if .Store.Get "hasMap" }}{{ partial "leaflet.html" . }}{{ end -}}
 </body>
 </html>

@@ -1,0 +1,269 @@
+{{- /*
+  fitness-activities: a single shared year dropdown drives BOTH the heatmap and
+  the per-year activity table.  requires {{< goodlinks-plotly >}} earlier on the
+  page (Plotly + shared .gl-* CSS).  data comes from the page bundle:
+    activities-<YYYY>.json.gz   (one per year, lazy-loaded)
+    activities-heatmap.json.gz  (all years, {"heatmap": {date: count}})
+*/ -}}
+<style>
+  .fit-toolbar { display: flex; align-items: center; gap: 0.6rem; margin: 0.4rem 0; flex-wrap: wrap; }
+  .fit-toolbar label { font-size: 0.85rem; }
+  .fit-toolbar select,
+  .fit-toolbar input { padding: 0.2rem 0.4rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); }
+  .fit-toolbar input[type="number"] { width: 68px; }
+  #fit-table-filter { width: 180px; }
+  .fit-col-num { text-align: right; font-variant-numeric: tabular-nums; }
+  /* fixed column widths (table-layout is fixed via .gl-articles); title takes
+     the remaining space so it gets the majority of the width */
+  #fit-table .fit-col-date  { width: 96px; }
+  #fit-table .fit-col-sport { width: 122px; }
+  #fit-table .fit-col-dist  { width: 66px; }
+  #fit-table .fit-col-time  { width: 76px; }
+  #fit-table .fit-col-hr    { width: 44px; }
+</style>
+
+<div class="fit-toolbar">
+  <label for="fit-year-select">year:</label>
+  <select id="fit-year-select"></select>
+  <label for="fit-sport-select">sport:</label>
+  <select id="fit-sport-select"><option value="">all</option></select>
+  <label for="fit-min-dist">min mi:</label>
+  <input id="fit-min-dist" type="number" min="0" step="1" placeholder="0" />
+  <label for="fit-min-dur">min min:</label>
+  <input id="fit-min-dur" type="number" min="0" step="5" placeholder="0" />
+  <input id="fit-table-filter" type="search" placeholder="filter by title…" />
+  <span id="fit-table-count" style="font-size:0.78rem;color:var(--fg-secondary)"></span>
+</div>
+
+<div id="fit-heatmap" class="gl-chart"></div>
+
+<div id="fit-table-container">
+  <table id="fit-table" class="gl-articles">
+    <thead>
+      <tr>
+        <th data-col="date"          data-type="str" class="fit-col-date sort-desc">date</th>
+        <th data-col="sport"         data-type="str" class="fit-col-sport">sport</th>
+        <th data-col="title"         data-type="str" class="fit-col-title">title</th>
+        <th data-col="distance_mi"   data-type="num" class="fit-col-num fit-col-dist">dist&nbsp;(mi)</th>
+        <th data-col="moving_time_s" data-type="num" class="fit-col-num fit-col-time">time</th>
+        <th data-col="avg_hr"        data-type="num" class="fit-col-num fit-col-hr">hr</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+(async () => {
+  const YEAR_URLS = {
+    {{- range (.Page.Resources.Match "activities-*.json.gz") }}
+    {{- $key := .Name | strings.TrimPrefix "activities-" | strings.TrimSuffix ".json.gz" }}
+    {{- if ne $key "heatmap" }}
+    "{{ $key }}": "{{ .RelPermalink }}",
+    {{- end }}
+    {{- end }}
+  };
+  {{ $hm := .Page.Resources.GetMatch "activities-heatmap.json.gz" }}
+  const HEATMAP_URL = {{ with $hm }}"{{ .RelPermalink }}"{{ else }}null{{ end }};
+
+  function fail(msg) {
+    document.getElementById('fit-table-container').innerHTML =
+      `<p class="gl-chart-error">render error: ${msg}</p>`;
+    console.error('fitness-activities', msg);
+  }
+
+  async function fetchGz(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetch failed: ${resp.status}`);
+    const ds = new DecompressionStream('gzip');
+    return JSON.parse(await new Response(resp.body.pipeThrough(ds)).text());
+  }
+
+  function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(s) { return String(s ?? '').replace(/"/g,'&quot;'); }
+
+  // ---- heatmap (cloned from goodlinks-heatmap, one shared year selector) ----
+  let heatmapData = null;
+  function buildYearGrid(year, heatmap) {
+    const NUM_WEEKS = 54;
+    const z = Array.from({length: 7}, () => Array(NUM_WEEKS).fill(null));
+    const text = Array.from({length: 7}, () => Array(NUM_WEEKS).fill(''));
+    const jan1 = new Date(year, 0, 1, 12), jan1dow = jan1.getDay();
+    const cur = new Date(year, 0, 1, 12);
+    while (cur.getFullYear() === year) {
+      const mm = String(cur.getMonth()+1).padStart(2,'0'), dd = String(cur.getDate()).padStart(2,'0');
+      const dateStr = `${year}-${mm}-${dd}`;
+      const doy = Math.round((cur - jan1)/86400000), weekCol = Math.floor((doy + jan1dow)/7);
+      if (weekCol < NUM_WEEKS) {
+        const count = heatmap[dateStr] || 0;
+        z[cur.getDay()][weekCol] = count;
+        text[cur.getDay()][weekCol] = `${dateStr}: ${count} activit${count === 1 ? 'y' : 'ies'}`;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthTickVals = [], monthTickText = [];
+    for (let m = 0; m < 12; m++) {
+      const d = new Date(year, m, 1, 12), doy = Math.round((d - jan1)/86400000);
+      const wcol = Math.floor((doy + jan1dow)/7);
+      if (wcol < NUM_WEEKS) { monthTickVals.push(wcol); monthTickText.push(MONTH[m]); }
+    }
+    return { z, text, monthTickVals, monthTickText };
+  }
+
+  function renderHeatmap(year) {
+    if (!heatmapData || !window.Plotly) return;
+    const el = document.getElementById('fit-heatmap');
+    const NUM_WEEKS = 53, NUM_ROWS = 7, GAP_PX = 3, MARGIN = { t:22, b:44, l:34, r:8 };
+    const CHART_W = el.offsetWidth;
+    const plotW = CHART_W - MARGIN.l - MARGIN.r;
+    const plotH = Math.round(plotW * NUM_ROWS / NUM_WEEKS);
+    const CHART_H = plotH + MARGIN.t + MARGIN.b;
+    const { z, text, monthTickVals, monthTickText } = buildYearGrid(year, heatmapData);
+    const allCounts = z.flat().filter(v => v !== null && v > 0);
+    const maxCount = allCounts.length ? Math.max(...allCounts) : 1;
+    const qz = z.map(r => r.map(v => {
+      if (v === null) return null; if (v === 0) return 0;
+      const ratio = v / maxCount;
+      if (ratio < 0.15) return 1; if (ratio < 0.40) return 2; if (ratio < 0.70) return 3; return 4;
+    }));
+    const PALETTE = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+    const colorscale = [[0,PALETTE[0]],[0.25,PALETTE[1]],[0.5,PALETTE[2]],[0.75,PALETTE[3]],[1.0,PALETTE[4]]];
+    const SQ_PX = 11, LEG_GAP = 3;
+    const sqW = SQ_PX/plotW, sqH = SQ_PX/plotH, gW = LEG_GAP/plotW;
+    const legY = -(22/plotH);
+    const legX0 = (plotW - (5*SQ_PX + 4*LEG_GAP + 2*28))/plotW;
+    const shapes = PALETTE.map((color, i) => ({
+      type:'rect', xref:'paper', yref:'paper',
+      x0: legX0 + 28/plotW + i*(sqW+gW), x1: legX0 + 28/plotW + i*(sqW+gW) + sqW,
+      y0: legY - sqH/2, y1: legY + sqH/2, fillcolor: color, line:{ width:0 },
+    }));
+    const legEnd = legX0 + 28/plotW + 5*(sqW+gW) - gW;
+    const annotations = [
+      { xref:'paper', yref:'paper', x: legX0+24/plotW, y: legY, text:'Less', showarrow:false, xanchor:'right', yanchor:'middle', font:{size:10,color:'#666'} },
+      { xref:'paper', yref:'paper', x: legEnd+4/plotW,  y: legY, text:'More', showarrow:false, xanchor:'left',  yanchor:'middle', font:{size:10,color:'#666'} },
+    ];
+    Plotly.react('fit-heatmap', [{
+      type:'heatmap', x:Array.from({length:NUM_WEEKS},(_,i)=>i), y:Array.from({length:NUM_ROWS},(_,i)=>i),
+      z:qz, text, hoverinfo:'text', xgap:GAP_PX, ygap:GAP_PX, colorscale, zmin:0, zmax:4, showscale:false,
+    }], {
+      width:CHART_W, height:CHART_H,
+      xaxis:{ tickvals:monthTickVals, ticktext:monthTickText, side:'top', showgrid:false, zeroline:false, range:[-0.5,NUM_WEEKS-0.5], fixedrange:true, tickfont:{size:11} },
+      yaxis:{ autorange:'reversed', tickvals:[1,3,5], ticktext:['Mon','Wed','Fri'], showgrid:false, zeroline:false, range:[-0.5,NUM_ROWS-0.5], fixedrange:true, tickfont:{size:10} },
+      shapes, annotations, margin:MARGIN, plot_bgcolor:'#fff', paper_bgcolor:'#fff',
+    }, { responsive:false, displayModeBar:false });
+  }
+
+  // ---- table ----
+  const yearCache = window.__fitnessYearData__ = window.__fitnessYearData__ || {};
+  async function loadYear(year) {
+    if (yearCache[year]) return yearCache[year];
+    const url = YEAR_URLS[year];
+    if (!url) throw new Error(`no data file for year ${year}`);
+    yearCache[year] = await fetchGz(url);
+    return yearCache[year];
+  }
+
+  const tbody = document.querySelector('#fit-table tbody');
+  let sortCol = 'date', sortType = 'str', sortDir = -1, rows = [];
+
+  function rowHtml(a, idx) {
+    const stripe = idx % 2 === 0 ? 'gl-row-even' : 'gl-row-odd';
+    const dist = a.distance_mi != null ? a.distance_mi.toFixed(2) : '';
+    const hr   = a.avg_hr != null ? a.avg_hr : '';
+    return `<tr class="${stripe}">
+      <td>${a.date || ''}</td>
+      <td>${escHtml(a.sport)}</td>
+      <td><a href="${escAttr(a.url)}">${escHtml(a.title)}</a></td>
+      <td class="fit-col-num">${dist}</td>
+      <td class="fit-col-num">${a.moving_time || ''}</td>
+      <td class="fit-col-num">${hr}</td>
+    </tr>`;
+  }
+
+  function currentFilters() {
+    return {
+      sport: document.getElementById('fit-sport-select').value,
+      minDist: parseFloat(document.getElementById('fit-min-dist').value) || 0,
+      minDurS: (parseFloat(document.getElementById('fit-min-dur').value) || 0) * 60,
+      text: document.getElementById('fit-table-filter').value.toLowerCase(),
+    };
+  }
+
+  function renderRows() {
+    const f = currentFilters();
+    let filtered = rows.filter(a =>
+      (!f.sport || a.sport === f.sport) &&
+      ((a.distance_mi || 0) >= f.minDist) &&
+      ((a.moving_time_s || 0) >= f.minDurS) &&
+      (!f.text || (a.title || '').toLowerCase().includes(f.text))
+    );
+    const cmp = (a, b) => {
+      const av = a[sortCol], bv = b[sortCol];
+      if (sortType === 'num') return sortDir * ((av ?? -Infinity) - (bv ?? -Infinity));
+      return sortDir * String(av ?? '').localeCompare(String(bv ?? ''));
+    };
+    const sorted = [...filtered].sort(cmp);
+    tbody.innerHTML = sorted.map((a, i) => rowHtml(a, i)).join('');
+    document.getElementById('fit-table-count').textContent =
+      sorted.length === rows.length ? `${rows.length} activities` : `${sorted.length} of ${rows.length}`;
+  }
+
+  function populateSports() {
+    const sel = document.getElementById('fit-sport-select');
+    const cur = sel.value;
+    const sports = [...new Set(rows.map(a => a.sport).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">all</option>' +
+      sports.map(s => `<option value="${escAttr(s)}">${escHtml(s)}</option>`).join('');
+    if (sports.includes(cur)) sel.value = cur; else sel.value = '';
+  }
+
+  async function switchYear(year) {
+    rows = await loadYear(year);
+    sortCol = 'date'; sortType = 'str'; sortDir = -1;
+    document.querySelectorAll('#fit-table th').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    document.querySelector('#fit-table th[data-col="date"]').classList.add('sort-desc');
+    populateSports();
+    renderRows();
+    renderHeatmap(parseInt(year));
+  }
+
+  try {
+    const years = Object.keys(YEAR_URLS).filter(y => /^\d{4}$/.test(y)).sort().reverse();
+    if (years.length === 0) throw new Error('no activities-<year>.json.gz found – run strava-visuals.py');
+    if (HEATMAP_URL) { try { heatmapData = (await fetchGz(HEATMAP_URL)).heatmap || {}; } catch (e) { console.error(e); } }
+
+    const sel = document.getElementById('fit-year-select');
+    const thisYear = String(new Date().getFullYear());
+    const defaultYear = years.includes(thisYear) ? thisYear : years[0];
+    years.forEach(y => {
+      const o = document.createElement('option');
+      o.value = y; o.textContent = y;
+      if (y === defaultYear) o.selected = true;
+      sel.appendChild(o);
+    });
+
+    sel.addEventListener('change', () => switchYear(sel.value).catch(fail));
+    document.getElementById('fit-sport-select').addEventListener('change', renderRows);
+    document.getElementById('fit-min-dist').addEventListener('input', renderRows);
+    document.getElementById('fit-min-dur').addEventListener('input', renderRows);
+    document.getElementById('fit-table-filter').addEventListener('input', renderRows);
+
+    document.querySelectorAll('#fit-table th').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        sortDir = (sortCol === col) ? sortDir * -1 : 1;
+        sortCol = col; sortType = th.dataset.type;
+        document.querySelectorAll('#fit-table th').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+        th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+        renderRows();
+      });
+    });
+
+    window.addEventListener('resize', () => renderHeatmap(parseInt(sel.value)));
+    await switchYear(defaultYear);
+  } catch (err) { fail(err.message); }
+})();
+</script>
