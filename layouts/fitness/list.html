@@ -1,0 +1,10 @@
+{{- /* /fitness/ — renders _index.md (which embeds the fitness-activities shortcode) */ -}}
+{{- define "content" -}}
+  <div class="content-page">
+    <h1 class="list-title">{{ .Title }}</h1>
+    <div class="content" id="content">{{ .Content }}</div>
+    {{- with .Params.data_updated }}
+    <p style="font-size:0.78rem;color:var(--fg-secondary)">data updated: {{ . }}</p>
+    {{- end }}
+  </div>
+{{- end -}}
