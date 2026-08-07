@@ -3,6 +3,7 @@
 <footer class="footer">
   <div class="footer-inner">
     {{- with $f.custom }}<div>{{ . | safeHTML }}</div>{{ end -}}
+    {{- if .IsHome }}{{ with $f.home_custom }}<div>{{ . | safeHTML }}</div>{{ end }}{{ end -}}
     {{- if ne $f.copyright false -}}
       {{- $since := $f.since -}}
       {{- $now := now.Format "2006" -}}
