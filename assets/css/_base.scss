@@ -115,6 +115,10 @@ blockquote {
   padding: 0.2rem 0 0.2rem 1rem;
   border-left: 3px solid var(--blockquote);
   color: var(--fg-secondary);
+
+  // the inner <p> margin would otherwise run the left border a line past
+  // the last line of the quote.
+  > :last-child { margin-bottom: 0; }
 }
 
 mark { background: var(--mark); color: inherit; }
