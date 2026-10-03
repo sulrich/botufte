@@ -1,0 +1,346 @@
+@use "variables" as *;
+// ==========================================================================
+// trip reports (layouts/trip) + strava cards + photo lightbox
+// the trip page reuses the single-layout grid: the toc rail becomes the day
+// list, and day notes / photo captions float into the right gutter the same
+// way sidenotes do (see _sidenote.scss). docs/trip-reports.md has the markup.
+// ==========================================================================
+
+$main-w: $measure + $gap + $margin-col;
+$gutter: $margin-col + $gap;
+
+// ---- day rail (left toc column) ----
+.trip-rail {
+  ol { list-style: none; margin: 0; padding: 0; }
+  a {
+    display: grid;
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    font-variant-numeric: tabular-nums;
+    &.has-notes { color: var(--fg); }
+    &.active { color: var(--link); }
+  }
+}
+.trip-rail-place { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.trip-meta {
+  color: var(--fg-secondary);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0.4rem 0 1.5rem;
+}
+
+// ---- overview map ----
+.single.trip > .trip-map-wrap { max-width: $main-w; }
+.trip-map {
+  height: 30rem;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: $radius;
+}
+.trip-map-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--fg-secondary);
+  margin-bottom: 0.4rem;
+  button {
+    font: inherit;
+    font-size: 0.78rem;
+    background: none;
+    color: var(--fg-secondary);
+    border: 1px solid var(--border);
+    border-radius: $radius;
+    padding: 0.05rem 0.5rem;
+    cursor: pointer;
+    &[aria-pressed="true"] { color: var(--fg); border-color: var(--fg-secondary); }
+  }
+}
+.trip-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.2rem;
+  font-size: 0.75rem;
+  color: var(--fg-secondary);
+  margin: 0.4rem 0 1.5rem;
+  span { display: inline-flex; align-items: center; gap: 0.4rem; }
+  svg { width: 28px; height: 8px; }
+}
+.leg-swatch {
+  fill: none;
+  stroke: var(--map-rail);
+  stroke-width: 2;
+  &.sail { stroke: var(--map-sail); stroke-width: 2.5; stroke-dasharray: 6 5; }
+  &.ferry { stroke: var(--map-sail); stroke-dasharray: 1 5; stroke-linecap: round; }
+  &.hike, &.walk { stroke: var(--map-hike); stroke-width: 2.5; }
+}
+.photo-swatch { fill: var(--map-dot); }
+
+// ---- leaflet, shared by trip maps + strava cards ----
+// the .leaflet-container half of each selector outranks leaflet.css, which loads
+// after the theme stylesheet
+.trip-map, .trip-minimap, .strava-card-map {
+  &.leaflet-container { background: var(--map-bg); font-family: inherit; }
+  background: var(--map-bg);
+  font-family: inherit;
+  // raster tiles are quieted down to the page palette (--tile-filter flips in dark mode)
+  .leaflet-tile-pane { filter: var(--tile-filter); }
+  &.leaflet-container .leaflet-control-attribution {
+    background: transparent;
+    color: var(--fg-secondary);
+    font-size: 10px;
+    a { color: var(--fg-secondary); }
+  }
+  &.leaflet-container .leaflet-bar a { background: var(--bg); color: var(--fg); border-color: var(--border); }
+}
+.leaflet-tooltip.place-label {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0 0 0 2px;
+  color: var(--fg);
+  font-size: 11px;
+  text-shadow: 0 0 2px var(--bg), 0 0 2px var(--bg), 0 0 3px var(--bg);
+  &.minor { color: var(--fg-secondary); font-size: 10px; }
+  &::before { display: none; }
+}
+.leaflet-tooltip.map-tip {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  box-shadow: none;
+  padding: 3px 5px;
+  font-size: 11px;
+  &::before { display: none; }
+}
+.photo-tip img { display: block; width: 120px; height: auto; border-radius: 2px; margin-bottom: 2px; }
+.photo-pin {
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  background: var(--bg);
+  border: 1.5px solid var(--map-dot);
+  border-radius: 1px;
+  cursor: pointer;
+  &.featured { background: var(--map-dot); }
+}
+
+// ---- days ----
+.trip-day {
+  display: flow-root; // contain the floats that don't reach into the gutter
+  border-top: 1px solid var(--border);
+  padding-top: 1.75rem;
+  margin-top: 1.25rem;
+  scroll-margin-top: $header-height + 0.5rem;
+  h2 { margin: 0 0 0.6rem; }
+}
+.trip-day-date {
+  font-size: 0.8rem;
+  color: var(--fg-secondary);
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 0.15rem;
+}
+
+// margin: date, route, day map
+.trip-day-meta {
+  float: right;
+  clear: right;
+  width: $margin-col;
+  margin-right: -$gutter;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--fg-secondary);
+  .when { color: var(--fg); font-weight: 700; font-size: 0.85rem; }
+}
+.trip-route {
+  list-style: none;
+  margin: 0.6rem 0 0.8rem;
+  padding: 0;
+  li.stop {
+    color: var(--fg);
+    position: relative;
+    padding-left: 1rem;
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0.1rem;
+      top: 0.45em;
+      width: 7px;
+      height: 7px;
+      box-sizing: border-box;
+      border-radius: 50%;
+      border: 1.5px solid var(--fg);
+      background: var(--bg);
+    }
+    &.anchorage::before { border-radius: 1px; }
+    &.city::before { background: var(--fg); }
+    &.trail::before { border-color: var(--map-hike); }
+  }
+  .derived { display: block; color: var(--fg-secondary); font-style: italic; }
+  li.leg {
+    margin-left: calc(0.1rem + 3px);
+    padding: 0.15rem 0 0.15rem calc(1rem - 3px);
+    border-left: 2px solid var(--map-rail);
+    font-size: 0.72rem;
+    &.sail { border-left: 2px dashed var(--map-sail); }
+    &.ferry { border-left: 2px dotted var(--map-sail); }
+    &.hike, &.walk { border-left-color: var(--map-hike); }
+  }
+}
+.trip-minimap {
+  height: 10rem;
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  margin-top: 0.4rem;
+}
+
+// a day you haven't written up: one line
+.trip-day.compact { padding-top: 0.55rem; margin-top: 0.55rem; }
+.trip-day-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+  color: var(--fg-secondary);
+  .d { font-variant-numeric: tabular-nums; min-width: 6.5rem; }
+  .r { color: var(--fg); }
+  .n { font-style: italic; font-size: 0.75rem; }
+}
+
+// ---- photos ----
+.trip-photo {
+  margin: 0.4rem 0 1.4rem;
+  figcaption {
+    float: right;
+    clear: right;
+    width: $margin-col;
+    margin-right: -$gutter;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--fg-secondary);
+    b { display: block; color: var(--fg); }
+  }
+  // buttons shrink to fit their content, so size the button, not just the img
+  .trip-photo-open { width: 100%; }
+  img { display: block; width: 100%; height: auto; border-radius: $radius; }
+  &.wide {
+    margin-right: -$gutter;
+    figcaption { float: none; width: auto; margin: 0.4rem 0 0; }
+  }
+}
+.trip-photo-meta { display: block; font-size: 0.7rem; margin-top: 0.2rem; font-variant-numeric: tabular-nums; }
+.trip-photo-open, .trip-strip button {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+
+.trip-strip-wrap { clear: both; margin-right: -$gutter; }
+.trip-strip-head { font-size: 0.75rem; color: var(--fg-secondary); margin: 0.4rem 0 0.35rem; }
+.trip-strip {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  button { flex: none; scroll-snap-align: start; }
+  img { display: block; height: 8.5rem; width: auto; border-radius: 3px; }
+}
+
+// ---- strava card (any page) ----
+.strava-card {
+  margin: 0.4rem 0 1.4rem;
+  figcaption {
+    float: right;
+    clear: right;
+    width: $margin-col;
+    margin-right: -$gutter;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--fg-secondary);
+  }
+}
+.strava-card-box {
+  border: 1px solid var(--border);
+  border-radius: $radius;
+  padding: 0.7rem 0.8rem 0.8rem;
+}
+.strava-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  margin-bottom: 0.5rem;
+}
+.strava-card-title { font-weight: 700; }
+.content a.strava-card-title { text-decoration: none; }
+.strava-card-kicker { font-size: 0.72rem; color: var(--fg-secondary); font-variant-numeric: tabular-nums; }
+.strava-card-map { height: 15rem; border: 1px solid var(--border); border-radius: 3px; }
+.strava-card-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+  margin: 0.7rem 0 0;
+  dt { font-size: 0.7rem; color: var(--fg-secondary); }
+  dd { margin: 0; font-variant-numeric: tabular-nums; }
+  small { font-size: 0.7rem; color: var(--fg-secondary); }
+}
+
+// ---- lightbox (photoswipe) in the page palette ----
+.pswp {
+  --pswp-bg: var(--bg);
+  --pswp-placeholder-bg: var(--code-bg);
+  --pswp-icon-color: var(--fg);
+  --pswp-icon-color-secondary: var(--bg);
+  --pswp-icon-stroke-color: var(--bg);
+  --pswp-error-text-color: var(--fg);
+  font-family: $font-body;
+}
+.pswp__counter { color: var(--fg-secondary); text-shadow: none; font-size: 0.8rem; }
+.pswp-trip-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.8rem 1.25rem 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  .inner { max-width: $measure; margin: 0 auto; }
+  .meta { color: var(--fg-secondary); font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+}
+
+// ---- narrow screens: the gutter goes away, so margin bits drop inline ----
+@media (max-width: $bp-margin) {
+  .trip-day-meta, .trip-photo figcaption, .strava-card figcaption {
+    float: none;
+    width: auto;
+    margin: 0 0 0.8rem;
+  }
+  .trip-photo figcaption { margin: 0.4rem 0 0; }
+  .trip-photo { display: flex; flex-direction: column-reverse; }
+  .trip-route {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0.5rem;
+    align-items: center;
+    margin: 0.3rem 0;
+    li.leg { border-left: 0; margin: 0; padding: 0; &::before { content: "-> "; } }
+    li.leg.sail, li.leg.ferry { border-left: 0; }
+  }
+  .trip-minimap { display: none; }
+  .trip-photo.wide, .trip-strip-wrap { margin-right: 0; }
+  .trip-map { height: 22rem; }
+}
+@media (max-width: 560px) {
+  .strava-card-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

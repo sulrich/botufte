@@ -32,7 +32,10 @@
   {{- /* mermaid: only on pages that actually contain a diagram */ -}}
   {{- if .Store.Get "hasMermaid" }}{{ partial "mermaid.html" . }}{{ end -}}
 
-  {{- /* leaflet: only on activity pages that have a route polyline */ -}}
+  {{- /* maps: leaflet loads once for fitness activity routes (hasMap) and for
+        trip reports / strava cards (hasTrip); each then gets its own init */ -}}
+  {{- if or (.Store.Get "hasMap") (.Store.Get "hasTrip") }}{{ partial "leaflet-lib.html" . }}{{ end -}}
   {{- if .Store.Get "hasMap" }}{{ partial "leaflet.html" . }}{{ end -}}
+  {{- if .Store.Get "hasTrip" }}{{ partial "trip/scripts.html" . }}{{ end -}}
 </body>
 </html>

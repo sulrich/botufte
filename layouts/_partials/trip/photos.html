@@ -1,0 +1,30 @@
+{{- /* trip/photos: the page bundle's photos.yaml (written by the site's
+      bin/trip-photos.py), with media urls and rendered captions added.
+      call cached, once per page:
+        {{ $photos := partialCached "trip/photos.html" .Page .Page.RelPermalink }}
+      returns dict "byId" (id -> photo) and "list" (all photos, by capture time;
+      hidden ones included, callers filter). */ -}}
+{{- $page := . -}}
+{{- $byId := dict -}}
+{{- $list := slice -}}
+{{- with .Resources.Get "photos.yaml" -}}
+  {{- range (transform.Unmarshal .) -}}
+    {{- $key := .key -}}
+    {{- $w := .width | default 1600 -}}
+    {{- $h := .height | default 1067 -}}
+    {{- /* thumb is 480px on the long edge; keep the aspect for layout */ -}}
+    {{- $scale := div 480.0 (math.Max $w $h) -}}
+    {{- $p := merge . (dict
+          "id" (string .id)
+          "width" $w "height" $h
+          "thumbW" (math.Round (mul $w $scale)) "thumbH" (math.Round (mul $h $scale))
+          "thumb" (partial "media-url.html" (printf "%s-thumb.webp" $key))
+          "display" (partial "media-url.html" (printf "%s-display.webp" $key))
+          "full" (partial "media-url.html" (printf "%s-full.webp" $key))
+          "time" (cond (isset . "taken") (substr (string .taken) 11 5) "")
+          "captionHTML" ($page.RenderString (dict "display" "inline") (.caption | default ""))) -}}
+    {{- $byId = merge $byId (dict (string .id) $p) -}}
+    {{- $list = $list | append $p -}}
+  {{- end -}}
+{{- end -}}
+{{- return dict "byId" $byId "list" (sort $list "taken") -}}

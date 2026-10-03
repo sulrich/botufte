@@ -1,0 +1,17 @@
+{{- /* trip reports + strava cards: photoswipe (lightbox), the map config, and
+      trip.js. loaded only on pages that set .Store "hasTrip" (see baseof.html);
+      leaflet comes from leaflet-lib.html. */ -}}
+{{- $maps := site.Params.maps | default dict -}}
+{{- $cfg := dict
+      "tileURL" ($maps.tileurl | default "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+      "attribution" ($maps.attribution | default "&copy; OpenStreetMap contributors")
+      "maxZoom" ($maps.maxzoom | default 18) -}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/photoswipe.css"
+  integrity="sha384-IfxC36XL/toUyJ939C73PcgMuRzAZuIzZxE38drsmO5p6jD7ei+Zx/1oA/0l8ysE" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/umd/photoswipe.umd.min.js"
+  integrity="sha384-k8EKyYcONphQ7zH4cQ0888JapXwrLTXQl/Ue1/jYgjVYahln1NWpnt2S4IC56LNh" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@5.4.4/dist/umd/photoswipe-lightbox.umd.min.js"
+  integrity="sha384-IiBVbUz6+U+Tbm/ijO2P0XRwcVzNfrMzloNLkrqHkbi6w5H0v6ie4fI9BIO4SwdK" crossorigin="anonymous"></script>
+<script type="application/json" id="map-config">{{ $cfg | jsonify | safeJS }}</script>
+{{- $js := resources.Get "js/trip.js" | minify | fingerprint -}}
+<script src="{{ $js.RelPermalink }}" integrity="{{ $js.Data.Integrity }}"></script>

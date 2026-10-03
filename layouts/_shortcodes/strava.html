@@ -1,0 +1,34 @@
+{{- /* strava: a route card for an activity in the site's strava archive
+      (its /fitness/<date>-<id>/ page, emitted by bin/strava-visuals.py).
+        {{< strava id="20300220731" >}}
+      route map with start/finish, distance, moving time, elevation gain, pace,
+      and a link to the activity's /fitness/ page. nothing is fetched from
+      strava at build time, so the activity has to be synced first. */ -}}
+{{- $id := string (.Get "id" | default (.Get 0)) -}}
+{{- $a := partial "trip/strava-activity.html" (dict "id" $id "where" (printf "strava shortcode in %s" .Page.File.Path)) -}}
+{{- .Page.Store.Set "hasTrip" true -}}
+{{- $mi := div $a.distance 1609.344 -}}
+{{- $s := int $a.moving_time -}}
+{{- $hh := div $s 3600 }}{{ $mm := div (mod $s 3600) 60 }}{{ $ss := mod $s 60 -}}
+{{- $moving := cond (gt $hh 0) (printf "%d:%02d:%02d" $hh $mm $ss) (printf "%d:%02d" $mm $ss) -}}
+{{- $pace := "" -}}
+{{- if gt $mi 0.05 -}}
+  {{- $psec := math.Round (div (float $s) $mi) -}}
+  {{- $pace = printf "%d:%02d" (int (div $psec 60)) (int (mod (int $psec) 60)) -}}
+{{- end -}}
+{{- $start := $a.date -}}
+{{- $fit := $a.page -}}
+<figure class="strava-card" aria-label="strava activity: {{ $a.name }}">
+<figcaption>from the fitness archive.{{ with $fit }} <a href="{{ .RelPermalink }}">activity page</a>{{ end }}</figcaption>
+<div class="strava-card-box">
+<div class="strava-card-head">{{ with $fit }}<a class="strava-card-title" href="{{ .RelPermalink }}">{{ $a.name }}</a>{{ else }}<span class="strava-card-title">{{ $a.name }}</span>{{ end }}<span class="strava-card-kicker">strava &middot; {{ lower $a.sport_type }} &middot; {{ lower ($start.Format "Mon 2 Jan") }}</span></div>
+<div class="strava-card-map" data-polyline="{{ $a.polyline }}" data-day="{{ $start.Format "2006-01-02" }}" role="img" aria-label="route map"></div>
+<dl class="strava-card-stats">
+<div><dt>distance</dt><dd>{{ printf "%.2f" $mi }} mi <small>{{ printf "%.1f" (div $a.distance 1000.0) }} km</small></dd></div>
+<div><dt>moving time</dt><dd>{{ $moving }}</dd></div>
+<div><dt>elevation gain</dt><dd>{{ lang.FormatNumber 0 $a.elevation_ft }} ft</dd></div>
+{{- with $pace }}<div><dt>pace</dt><dd>{{ . }} <small>/mi</small></dd></div>{{ end }}
+</dl>
+</div>
+</figure>
+{{- /**/ -}}

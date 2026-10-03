@@ -1,0 +1,136 @@
+{{- /* trip-day: one day of a trip report (type: trip). paired for a day you've
+      written up, self-closing for a one-line day.
+
+        {{< trip-day date="2026-09-26" route="rome napoli procida ischia"
+                     mode="train ferry sail" title="termini to the boat" >}}
+        markdown prose, {{< photo >}}, {{< strava >}}, {{< sidenote >}} ...
+        {{< /trip-day >}}
+
+        {{< trip-day date="2026-09-27" route="ischia capri" mode="sail" />}}
+
+      params: date (YYYY-MM-DD, required), route (place keys from front matter
+      `places:`), mode (one per leg, or one for all), track (photos | strava:<id>[,<id>]),
+      title, note, strip (false hides the photo strip). see docs/trip-reports.md.
+
+      each day is also recorded in .Page.Store "tripDays" (keyed by date) so the
+      trip layout can build the day rail and the map after .Content renders. */ -}}
+{{- $p := .Page -}}
+{{- $where := printf "trip-day in %s" $p.File.Path -}}
+{{- $date := .Get "date" | default "" -}}
+{{- if not (findRE `^\d{4}-\d{2}-\d{2}$` $date) -}}
+  {{- errorf "%s: date=%q must be YYYY-MM-DD" $where $date -}}
+{{- end -}}
+{{- $where = printf "trip-day %s in %s" $date $p.File.Path -}}
+{{- $t := time.AsTime $date -}}
+{{- $places := $p.Params.places | default dict -}}
+
+{{- /* route: place keys, all of which must exist in front matter */ -}}
+{{- $route := findRE `\S+` (.Get "route" | default "") -}}
+{{- range $route -}}
+  {{- if not (index $places .) -}}
+    {{- errorf "%s: unknown place %q in route. add it under places: in the front matter" $where . -}}
+  {{- end -}}
+{{- end -}}
+
+{{- /* track: straight lines (default), photo positions, or strava activities */ -}}
+{{- $track := .Get "track" | default "" -}}
+{{- $trackKind := "" -}}
+{{- $strava := slice -}}
+{{- if eq $track "photos" -}}
+  {{- $trackKind = "photos" -}}
+{{- else if hasPrefix $track "strava:" -}}
+  {{- $trackKind = "strava" -}}
+  {{- range split (strings.TrimPrefix "strava:" $track) "," -}}
+    {{- $a := partial "trip/strava-activity.html" (dict "id" (trim . " ") "where" $where) -}}
+    {{- $strava = $strava | append (dict "id" $a.id "polyline" $a.polyline "km" (div $a.distance 1000.0)) -}}
+  {{- end -}}
+{{- else if $track -}}
+  {{- errorf "%s: track=%q should be photos or strava:<id>" $where $track -}}
+{{- end -}}
+
+{{- /* modes: one per leg; a single mode applies to every leg */ -}}
+{{- $modes := findRE `\S+` (.Get "mode" | default "") -}}
+{{- $nLegs := cond (eq $trackKind "strava") (len $strava) (math.Max 0 (sub (len $route) 1)) -}}
+{{- $nLegs = int $nLegs -}}
+{{- if and (gt $nLegs 0) (eq (len $modes) 0) -}}
+  {{- errorf "%s: route has %d leg(s) but no mode= (sail, ferry, train, hike, walk, drive)" $where $nLegs -}}
+{{- end -}}
+{{- if and (eq (len $modes) 1) (gt $nLegs 1) -}}
+  {{- $one := index $modes 0 -}}
+  {{- $modes = slice -}}
+  {{- range seq $nLegs }}{{ $modes = $modes | append $one }}{{ end -}}
+{{- end -}}
+{{- if and (gt $nLegs 0) (ne (len $modes) $nLegs) -}}
+  {{- errorf "%s: %d mode(s) for %d leg(s); give one mode per leg or a single mode" $where (len $modes) $nLegs -}}
+{{- end -}}
+
+{{- /* labels */ -}}
+{{- $names := slice -}}
+{{- range $route -}}
+  {{- $pl := index $places . -}}
+  {{- if ne $pl.kind "waypoint" }}{{ $names = $names | append ($pl.name | default .) }}{{ end -}}
+{{- end -}}
+{{- $routeText := delimit $names " -> " -}}
+{{- $note := .Get "note" | default "" -}}
+{{- $label := cond (gt (len $names) 0) (index $names (sub (len $names) 1)) $note -}}
+{{- $title := .Get "title" | default $routeText | default $note -}}
+{{- $inner := trim .Inner " \n\t" -}}
+{{- $hasNotes := ne $inner "" -}}
+{{- $anchor := printf "d-%s" ($t.Format "20060102") -}}
+{{- $start := time.AsTime ($p.Date.Format "2006-01-02") -}}
+{{- $dayN := add 1 (div (sub $t.Unix $start.Unix) 86400) -}}
+{{- $when := lower ($t.Format "Mon 2 Jan") -}}
+
+{{- $p.Store.Set "hasTrip" true -}}
+{{- $p.Store.SetInMap "tripDays" $date (dict
+      "date" $date "anchor" $anchor "route" $route "modes" $modes "track" $trackKind
+      "strava" $strava "title" $title "label" $label "short" (lower ($t.Format "2 Jan"))
+      "hasNotes" $hasNotes) -}}
+
+{{- $photos := partialCached "trip/photos.html" $p $p.RelPermalink -}}
+{{- $dayPhotos := where (where $photos.list "day" $date) "hidden" "!=" true -}}
+{{- $strip := ne (.Get "strip") "false" -}}
+
+{{- if not $hasNotes }}
+<section class="trip-day compact" id="{{ $anchor }}" data-date="{{ $date }}">
+<div class="trip-day-line"><span class="d">{{ $when }}</span><span class="r">{{ $routeText | default $note }}</span>{{ with $modes }}<span class="n">{{ delimit (uniq .) ", " }}</span>{{ end }}<span class="n">no notes yet{{ with $dayPhotos }} &middot; {{ len . }} photos{{ end }}</span></div>
+</section>
+{{- else }}
+<section class="trip-day" id="{{ $anchor }}" data-date="{{ $date }}">
+<aside class="trip-day-meta">
+<span class="when">{{ $when }}</span>
+<ul class="trip-route">
+{{- range $i, $k := $route -}}
+  {{- $pl := index $places $k -}}
+  {{- if ne $pl.kind "waypoint" -}}
+  <li class="stop {{ $pl.kind }}">{{ $pl.name | default $k }}{{ if not (isset $pl "lat") }}<span class="derived">position from photos</span>{{ end }}</li>
+  {{- end -}}
+  {{- if and (lt $i $nLegs) (ne $trackKind "strava") -}}
+  {{- $m := index $modes $i -}}
+  <li class="leg {{ $m }}">{{ $m }} &middot; <span class="leg-dist" data-day="{{ $date }}" data-leg="{{ $i }}"></span>{{ if eq $trackKind "photos" }} &middot; via photo positions{{ end }}</li>
+  {{- end -}}
+{{- end -}}
+{{- if eq $trackKind "strava" -}}
+  {{- range $i, $s := $strava -}}
+  {{- $m := index $modes $i -}}
+  {{- $dist := cond (in (slice "sail" "ferry") $m) (printf "%.0f nm" (div $s.km 1.852)) (printf "%.1f km" $s.km) -}}
+  <li class="leg {{ $m }}">{{ $m }} &middot; {{ $dist }} &middot; strava</li>
+  {{- end -}}
+{{- end -}}
+</ul>
+<div class="trip-minimap" data-day="{{ $date }}" aria-hidden="true"></div>
+</aside>
+<header class="trip-day-head"><p class="trip-day-date">{{ $when }} &middot; day {{ $dayN }}</p><h2>{{ $title }}</h2></header>
+{{ $p.RenderString (dict "display" "block") $inner }}
+{{- if and $strip $dayPhotos }}
+<div class="trip-strip-wrap">
+<div class="trip-strip-head"><span>{{ len $dayPhotos }} photos</span></div>
+<div class="trip-strip">
+{{- range $dayPhotos -}}
+<button type="button" data-photo="{{ .id }}" aria-label="open photo{{ with .title }}: {{ . }}{{ end }}"><img src="{{ .thumb }}" width="{{ .thumbW }}" height="{{ .thumbH }}" alt="{{ .title | default .id }}" loading="lazy"></button>
+{{- end -}}
+</div>
+</div>
+{{- end }}
+</section>
+{{- end }}

@@ -1,0 +1,99 @@
+{{- /* trip report (front matter `type: trip`). see docs/trip-reports.md.
+
+      the body is a run of {{< trip-day >}} shortcodes. .Content is rendered
+      first so those shortcodes have filled .Store "tripDays"; the day rail and
+      the map data are built from that afterwards. */ -}}
+{{- define "content" -}}
+  {{- $content := .Content -}}
+  {{- .Store.Set "hasTrip" true -}}
+  {{- $places := .Params.places | default dict -}}
+  {{- $photos := partialCached "trip/photos.html" . .RelPermalink -}}
+  {{- $visible := where $photos.list "hidden" "!=" true -}}
+
+  {{- $days := slice -}}
+  {{- range $date, $d := .Store.Get "tripDays" | default dict }}{{ $days = $days | append $d }}{{ end -}}
+  {{- $days = sort $days "date" -}}
+
+  {{- /* a place without lat/lon borrows its position from the gps of photos taken
+        on the day you arrived there; fail now if there's nothing to borrow */ -}}
+  {{- range $k, $pl := $places -}}
+    {{- if not (isset $pl "lat") -}}
+      {{- $arrival := "" -}}
+      {{- range $days -}}
+        {{- if and (not $arrival) (gt (len .route) 0) (eq (index .route (sub (len .route) 1)) $k) }}{{ $arrival = .date }}{{ end -}}
+      {{- end -}}
+      {{- if not $arrival -}}
+        {{- errorf "trip %s: place %q has no lat/lon and no trip-day route ends there to borrow a position from. add lat/lon" $.File.Path $k -}}
+      {{- end -}}
+      {{- $gps := 0 -}}
+      {{- range where $visible "day" $arrival }}{{ if isset . "lat" }}{{ $gps = add $gps 1 }}{{ end }}{{ end -}}
+      {{- if eq $gps 0 -}}
+        {{- errorf "trip %s: place %q has no lat/lon and no photos with gps on %s (the day you arrived). add lat/lon, or photos" $.File.Path $k $arrival -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- /* data for trip.js: places, days, and the photos it maps + shows in the lightbox */ -}}
+  {{- $jsPhotos := slice -}}
+  {{- range $visible -}}
+    {{- $jsPhotos = $jsPhotos | append (dict
+          "id" .id "day" .day "taken" .taken "time" .time "lat" .lat "lon" .lon
+          "title" .title "caption" .captionHTML "camera" .camera "featured" .featured
+          "w" .width "h" .height "thumb" .thumb "full" .full) -}}
+  {{- end -}}
+  {{- $data := dict "places" $places "days" $days "photos" $jsPhotos "views" (.Params.mapViews | default slice) -}}
+
+  {{- $first := "" }}{{ $last := "" -}}
+  {{- with $days }}{{ $first = time.AsTime (index . 0).date }}{{ $last = time.AsTime (index . (sub (len .) 1)).date }}{{ end -}}
+
+  <div class="single-layout trip-layout">
+    <aside class="toc-rail trip-rail" aria-label="days">
+      <div class="toc-title">days</div>
+      <ol>
+        {{- range $days }}
+        <li><a href="#{{ .anchor }}" data-day="{{ .anchor }}"{{ if .hasNotes }} class="has-notes"{{ end }}><span>{{ .short }}</span><span class="trip-rail-place">{{ .label }}</span></a></li>
+        {{- end }}
+      </ol>
+    </aside>
+
+    <article class="single trip">
+      <h1 class="single-title">{{ .Title }}</h1>
+      {{- with .Params.summary }}<p class="single-subtitle">{{ . }}</p>{{ end }}
+      <p class="trip-meta">
+        {{- with $first }}{{ lower ($first.Format "2 Jan") }} - {{ lower ($last.Format "2 Jan 2006") }} &middot; {{ len $days }} days{{ end -}}
+        {{- with $visible }} &middot; {{ len . }} photos{{ end -}}
+        <span class="trip-sail" hidden></span>
+      </p>
+
+      <section class="trip-map-wrap" aria-label="trip map">
+        {{- with .Params.mapViews }}
+        <div class="trip-map-tools">
+          <span>view:</span>
+          <button type="button" data-view="all" aria-pressed="true">whole trip</button>
+          {{- range $i, $v := . }}
+          <button type="button" data-view="{{ $i }}" aria-pressed="false">{{ $v.name }}</button>
+          {{- end }}
+        </div>
+        {{- end }}
+        <div id="trip-map" class="trip-map"></div>
+        <div class="trip-legend">
+          {{- $used := slice -}}
+          {{- range $days }}{{ range .modes }}{{ $used = $used | append . }}{{ end }}{{ end -}}
+          {{- range (uniq $used) }}
+          <span><svg viewBox="0 0 28 8" aria-hidden="true"><line class="leg-swatch {{ . }}" x1="1" y1="4" x2="27" y2="4"/></svg>{{ . }}</span>
+          {{- end }}
+          {{- if where $visible "featured" true }}
+          <span><svg viewBox="0 0 28 8" aria-hidden="true"><rect x="10" y="0" width="8" height="8" class="photo-swatch"/></svg>featured photo</span>
+          {{- end }}
+        </div>
+      </section>
+
+      <div class="content trip-days" id="content">
+        {{- $content -}}
+      </div>
+
+      <script type="application/json" id="trip-data">{{ $data | jsonify | safeJS }}</script>
+      {{- partial "single/footer.html" . -}}
+    </article>
+  </div>
+{{- end -}}
