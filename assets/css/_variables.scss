@@ -66,6 +66,17 @@ $radius:          4px;
   --mark: #{$mark};
   --selection: #{$selection};
 
+  // maps (trip reports, strava cards): route colors by travel mode, markers,
+  // and the filter that quiets raster tiles down to the page palette
+  --map-sail: #{$link};
+  --map-rail: #{$fg-secondary};
+  --map-hike: #d6336c;
+  --map-dot: #{$fg};
+  --map-start: #40c463;
+  --map-finish: #e5534b;
+  --map-bg: #eef3f5;
+  --tile-filter: grayscale(1) contrast(0.9) brightness(1.04);
+
   // aliases consumed by the ported book/goodlinks shortcodes
   --background-color: var(--bg);
   --border-color: var(--border);
@@ -87,4 +98,11 @@ $radius:          4px;
   --blockquote: #{$blockquote-d};
   --mark: #{$mark-d};
   --selection: #{$selection-d};
+
+  --map-sail: #{$link-d};
+  --map-rail: #{$fg-secondary-d};
+  --map-hike: #f06595;
+  --map-dot: #{$fg-d};
+  --map-bg: #17181b;
+  --tile-filter: grayscale(1) invert(1) brightness(0.78) contrast(0.85);
 }

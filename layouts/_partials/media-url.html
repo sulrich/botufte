@@ -1,0 +1,16 @@
+{{- /* media-url: object key -> public url on the media host.
+
+      {{ partial "media-url.html" "trips/202609-italy/20260923/img_2201-thumb.webp" }}
+
+      the host is params.media.baseURL (falls back to the older top-level
+      params.mediaBaseURL). absolute urls pass through untouched, so callers can
+      mix keys and full urls. */ -}}
+{{- $key := . | default "" -}}
+{{- $out := $key -}}
+{{- if not (or (hasPrefix $key "http://") (hasPrefix $key "https://")) -}}
+  {{- $base := "" -}}
+  {{- with site.Params.media }}{{ with .baseurl }}{{ $base = . }}{{ end }}{{ end -}}
+  {{- if not $base }}{{ $base = site.Params.mediabaseurl | default "" }}{{ end -}}
+  {{- $out = printf "%s/%s" (strings.TrimSuffix "/" $base) (strings.TrimPrefix "/" $key) -}}
+{{- end -}}
+{{- return $out -}}

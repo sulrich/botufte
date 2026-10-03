@@ -1,10 +1,7 @@
-{{- /* leaflet route map — loaded only on pages that set .Store "hasMap" (see baseof.html).
+{{- /* fitness activity route map — loaded only on pages that set .Store "hasMap"
+       (see baseof.html; the leaflet library itself comes from leaflet-lib.html).
        decodes the Strava summary_polyline from #fit-map[data-polyline] and draws
        the route with start (green) / end (red) markers. */ -}}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 (() => {
   // decode a Google/Strava encoded polyline into [[lat,lng], ...]

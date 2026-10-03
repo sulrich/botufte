@@ -31,13 +31,13 @@
 
     {{- /* ---- photo carousel ---- */ -}}
     {{- /* photos are R2 object keys (e.g. strava/<id>/<uid>.jpg) served from the
-           mediaBaseURL host (files.botwerks.net); the bytes are not in the repo. */ -}}
+           media host (params.media.baseURL, see the media-url partial); the bytes
+           are not in the repo. */ -}}
     {{- with .Params.photos }}
-    {{- $base := $.Site.Params.mediaBaseURL | default "" | strings.TrimSuffix "/" -}}
     <div class="fit-carousel" data-count="{{ len . }}">
       <div class="fit-carousel-track">
         {{- range . }}
-        <figure class="fit-slide"><img src="{{ $base }}/{{ . }}" loading="lazy" alt=""></figure>
+        <figure class="fit-slide"><img src="{{ partial "media-url.html" . }}" loading="lazy" alt=""></figure>
         {{- end }}
       </div>
       {{- if gt (len .) 1 }}

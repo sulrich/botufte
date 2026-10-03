@@ -1,0 +1,21 @@
+{{- /* photo: a photo from the trip's photos.yaml, in the flow of the text, with
+      its caption in the margin.
+        {{< photo id="dsc04417" >}}
+        {{< photo id="dsc04417" caption="overrides the photos.yaml caption" wide="true" >}}
+      wide="true" spans the margin column too (caption goes underneath). */ -}}
+{{- $id := .Get "id" | default (.Get 0) -}}
+{{- $photos := partialCached "trip/photos.html" .Page .Page.RelPermalink -}}
+{{- $ph := index $photos.byId $id -}}
+{{- if not $ph -}}
+  {{- errorf "photo in %s: no photo %q in photos.yaml (ids are lowercased filenames, e.g. dsc04417; run bin/trip-photos.py to add photos)" .Page.File.Path $id -}}
+{{- end -}}
+{{- .Page.Store.Set "hasTrip" true -}}
+{{- $caption := $ph.captionHTML -}}
+{{- with .Get "caption" }}{{ $caption = $.Page.RenderString (dict "display" "inline") . }}{{ end -}}
+{{- $wide := in (slice "true" true "1") (.Get "wide") -}}
+<figure class="trip-photo{{ if $wide }} wide{{ end }}">
+{{- if not $wide }}<figcaption>{{ with $ph.title }}<b>{{ . }}</b>{{ end }}{{ $caption }}<span class="trip-photo-meta">{{ $ph.time }}{{ with $ph.camera }} &middot; {{ . }}{{ end }}</span></figcaption>{{ end -}}
+<button type="button" class="trip-photo-open" data-photo="{{ $ph.id }}" aria-label="open photo{{ with $ph.title }}: {{ . }}{{ end }}"><img src="{{ $ph.display }}" width="{{ $ph.width }}" height="{{ $ph.height }}" alt="{{ $ph.title | default $ph.id }}" loading="lazy"></button>
+{{- if $wide }}<figcaption>{{ with $ph.title }}<b>{{ . }}</b>{{ end }}{{ $caption }}<span class="trip-photo-meta">{{ $ph.time }}{{ with $ph.camera }} &middot; {{ . }}{{ end }}</span></figcaption>{{ end -}}
+</figure>
+{{- /**/ -}}

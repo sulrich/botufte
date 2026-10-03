@@ -1,0 +1,25 @@
+{{- /* trip/strava-activity: look up one activity among the site's /fitness/
+      pages (emitted from the strava archive by bin/strava-visuals.py) by its
+      strava_id, and return the fields maps and cards use. reading the emitted
+      pages keeps the 50MB raw archive in data/strava/ out of the build.
+      fails the build with a fix-it message when the activity isn't there.
+        partial "trip/strava-activity.html" (dict "id" "20300220731" "where" "...") */ -}}
+{{- $id := .id -}}
+{{- $page := false -}}
+{{- with site.GetPage "/fitness" -}}
+  {{- with where .Pages "Params.strava_id" (int $id) }}{{ $page = index . 0 }}{{ end -}}
+{{- end -}}
+{{- if not $page -}}
+  {{- errorf "%s: strava activity %s has no /fitness/ page yet. sync and emit it with ./bin/strava-visuals.py, then rebuild" .where $id -}}
+{{- end -}}
+{{- $p := $page.Params -}}
+{{- return dict
+      "id" $id
+      "page" $page
+      "name" $page.Title
+      "sport_type" ($p.sport_type | default $p.activity_type | default "activity")
+      "date" $page.Date
+      "distance" (mul (float ($p.distance_mi | default 0)) 1609.344)
+      "moving_time" (int ($p.moving_time_s | default 0))
+      "elevation_ft" (float ($p.elevation_gain_ft | default 0))
+      "polyline" ($p.summary_polyline | default "") -}}

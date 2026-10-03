@@ -61,6 +61,9 @@ submodules automatically.
 - **margin figure:** `{{</* image src="..." caption="..." margin="true" */>}}`
 - **table of contents:** off by default; enable per page with `toc: true` (or the
   loveit map form `toc: {enable: true}`) in front matter. requires headings.
+- **trip reports:** `type: trip` pages with a route map, per-day sections, photo
+  strips + lightbox and strava cards. start one with `hugo new content
+  travel/<trip> --kind trip`. see [docs/trip-reports.md](docs/trip-reports.md).
 - **mermaid:** fenced ` ```mermaid ` code blocks; the runtime loads lazily and only
   on pages that contain a diagram.
 - **font:** swap the woff2 in `static/fonts/` and update the `@font-face` blocks +
