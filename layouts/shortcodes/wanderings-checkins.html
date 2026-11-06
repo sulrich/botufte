@@ -1,0 +1,253 @@
+{{- /*
+  wanderings-checkins: a single year dropdown drives the map, heatmap, check-in list and
+  repeat-visit table. the repeat table can also flip to the all-time leaderboard.
+  requires {{< goodlinks-plotly >}} earlier on the page (Plotly + shared .gl-* CSS).
+  data comes from the page bundle, written by bin/swarm-visuals.py in the site repo:
+    checkins-<YYYY>.json.gz       {"checkins": [...], "venues": [...]}, lazy-loaded
+    checkins-heatmap.json.gz      {"heatmap": {date: count}}
+    checkins-leaderboard.json.gz  {"venues": [...]}, loaded on first use
+  a venue with no lat/lng is on purpose (see the script), it just doesn't get a pin.
+*/ -}}
+{{- .Page.Store.Set "hasLeaflet" true -}}
+{{- $maps := site.Params.maps | default dict -}}
+{{- $mapCfg := dict
+      "tileURL" ($maps.tileurl | default "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+      "attribution" ($maps.attribution | default "&copy; OpenStreetMap contributors")
+      "maxZoom" ($maps.maxzoom | default 18) -}}
+<style>
+  .wan-toolbar { display: flex; align-items: center; gap: 0.6rem; margin: 0.4rem 0; flex-wrap: wrap; }
+  .wan-toolbar label { font-size: 0.85rem; }
+  .wan-toolbar select,
+  .wan-toolbar input { padding: 0.2rem 0.4rem; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); }
+  #wan-filter { width: 180px; }
+  .wan-count { font-size: 0.78rem; color: var(--fg-secondary); }
+  #wan-map { width: 100%; height: 420px; border: 1px solid var(--border); border-radius: 6px; margin: 0.6rem 0 1rem; z-index: 0; }
+  .wan-table-container { overflow-x: auto; overflow-y: auto; max-height: 430px; border: 1px solid var(--border); border-radius: 4px; width: 100%; }
+  .wan-table-container table { margin: 0; }
+  .wan-col-num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.gl-articles td.wan-col-note { white-space: normal; }
+  #wan-checkins .wan-col-date  { width: 118px; }
+  #wan-checkins .wan-col-venue { width: 38%; }
+  #wan-checkins .wan-col-photo { width: 46px; text-align: center; }
+  #wan-repeats .wan-col-visits { width: 100px; }
+  #wan-repeats .wan-col-date   { width: 118px; }
+  #wan-repeats .wan-col-years  { width: 76px; }
+  .wan-photo svg { width: 1.05em; height: 1.05em; vertical-align: -0.15em; }
+  .wan-section-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin: 1.5rem 0 0.4rem; }
+  .wan-section-head h3 { margin: 0; }
+  .wan-scope button { padding: 0.15rem 0.5rem; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg); color: var(--fg); cursor: pointer; }
+  .wan-scope button[aria-pressed="true"] { background: var(--table-thead); font-weight: 600; }
+</style>
+
+<div class="wan-toolbar">
+  <label for="wan-year-select">year:</label>
+  <select id="wan-year-select"></select>
+  <input id="wan-filter" type="search" placeholder="filter by venue or note..." />
+  <span id="wan-count" class="wan-count"></span>
+</div>
+
+<div id="wan-map"></div>
+<div id="wan-heatmap" class="gl-chart"></div>
+
+<div class="wan-section-head"><h3>check-ins</h3></div>
+<div class="wan-table-container">
+  <table id="wan-checkins" class="gl-articles">
+    <thead>
+      <tr>
+        <th data-col="date"   data-type="str" class="wan-col-date sort-desc">date</th>
+        <th data-col="venue"  data-type="str" class="wan-col-venue">venue</th>
+        <th data-col="note"   data-type="str">note</th>
+        <th data-col="photos" data-type="num" class="wan-col-photo" aria-label="photos">{{ partial "icon.html" "camera" }}</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="wan-section-head">
+  <h3>repeat visits</h3>
+  <span class="wan-scope">
+    <button id="wan-scope-year" type="button" aria-pressed="true"></button>
+    <button id="wan-scope-all" type="button" aria-pressed="false">all years</button>
+  </span>
+  <span id="wan-repeat-count" class="wan-count"></span>
+</div>
+<div class="wan-table-container">
+  <table id="wan-repeats" class="gl-articles">
+    <thead>
+      <tr>
+        <th data-col="visits" data-type="num" class="wan-col-num wan-col-visits sort-desc">visits</th>
+        <th data-col="venue"  data-type="str">venue</th>
+        <th data-col="first"  data-type="str" class="wan-col-date">first</th>
+        <th data-col="last"   data-type="str" class="wan-col-date">last</th>
+        <th data-col="years"  data-type="num" class="wan-col-num wan-col-years">years</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+{{ partial "year-heatmap.html" . }}
+<script>
+{{- /* leaflet loads at the bottom of the page (see baseof.html), so wait for it */ -}}
+document.addEventListener('DOMContentLoaded', async () => {
+  const YEAR_URLS = {
+    {{- range (.Page.Resources.Match "checkins-*.json.gz") }}
+    {{- $key := .Name | strings.TrimPrefix "checkins-" | strings.TrimSuffix ".json.gz" }}
+    {{- if findRE `^\d{4}$` $key }}
+    "{{ $key }}": "{{ .RelPermalink }}",
+    {{- end }}
+    {{- end }}
+  };
+  const HEATMAP_URL = {{ with .Page.Resources.GetMatch "checkins-heatmap.json.gz" }}"{{ .RelPermalink }}"{{ else }}null{{ end }};
+  const LEADERBOARD_URL = {{ with .Page.Resources.GetMatch "checkins-leaderboard.json.gz" }}"{{ .RelPermalink }}"{{ else }}null{{ end }};
+  const MAP_CFG = {{ $mapCfg | jsonify | safeJS }};
+  const CAMERA = {{ partial "icon.html" "camera" | jsonify | safeJS }};
+
+  const $ = id => document.getElementById(id);
+
+  function fail(msg) {
+    $('wan-count').textContent = `render error: ${msg}`;
+    console.error('wanderings', msg);
+  }
+
+  async function fetchGz(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`fetch failed: ${resp.status}`);
+    const ds = new DecompressionStream('gzip');
+    return JSON.parse(await new Response(resp.body.pipeThrough(ds)).text());
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const filterText = () => $('wan-filter').value.toLowerCase();
+
+  // ---- sortable tables ----
+  function sortable(id, col, type, dir, render) {
+    const state = { col, type, dir };
+    const heads = document.querySelectorAll(`#${id} th`);
+    state.reset = () => {
+      Object.assign(state, { col, type, dir });
+      heads.forEach(h => {
+        h.classList.remove('sort-asc', 'sort-desc');
+        if (h.dataset.col === col) h.classList.add(dir === 1 ? 'sort-asc' : 'sort-desc');
+      });
+    };
+    state.sort = rows => [...rows].sort((a, b) => {
+      const av = a[state.col], bv = b[state.col];
+      if (state.type === 'num') return state.dir * ((av ?? -Infinity) - (bv ?? -Infinity));
+      return state.dir * String(av ?? '').localeCompare(String(bv ?? ''));
+    });
+    heads.forEach(th => th.addEventListener('click', () => {
+      state.dir = state.col === th.dataset.col ? state.dir * -1 : 1;
+      state.col = th.dataset.col;
+      state.type = th.dataset.type;
+      heads.forEach(h => h.classList.remove('sort-asc', 'sort-desc'));
+      th.classList.add(state.dir === 1 ? 'sort-asc' : 'sort-desc');
+      render();
+    }));
+    return state;
+  }
+
+  // ---- map ----
+  const map = L.map('wan-map', { scrollWheelZoom: false, preferCanvas: true });
+  L.tileLayer(MAP_CFG.tileURL, { maxZoom: MAP_CFG.maxZoom, attribution: MAP_CFG.attribution }).addTo(map);
+  const pins = L.layerGroup().addTo(map);
+
+  function renderMap(venues) {
+    pins.clearLayers();
+    const points = venues.filter(v => v.lat != null);
+    points.forEach(v => {
+      L.circleMarker([v.lat, v.lng], {
+        radius: Math.min(4 + 2 * Math.sqrt(v.visits - 1), 16),
+        color: '#fc4c02', weight: 1, fillColor: '#fc4c02', fillOpacity: 0.55,
+      }).addTo(pins).bindTooltip(`${esc(v.venue)} (${plural(v.visits, 'visit', 'visits')})`);
+    });
+    if (points.length) map.fitBounds(points.map(v => [v.lat, v.lng]), { padding: [24, 24], maxZoom: 13 });
+    else map.setView([20, 0], 2);
+  }
+
+  // ---- check-in list ----
+  let current = { checkins: [], venues: [] };
+  const matches = (...fields) => {
+    const text = filterText();
+    return !text || fields.some(f => (f || '').toLowerCase().includes(text));
+  };
+
+  const checkinSort = sortable('wan-checkins', 'date', 'str', -1, renderCheckins);
+  function renderCheckins() {
+    const rows = checkinSort.sort(current.checkins.filter(c => matches(c.venue, c.note)));
+    document.querySelector('#wan-checkins tbody').innerHTML = rows.map((c, i) => `
+      <tr class="${i % 2 === 0 ? 'gl-row-even' : 'gl-row-odd'}">
+        <td>${esc(c.date)}</td>
+        <td title="${esc(c.venue)}">${esc(c.venue)}</td>
+        <td class="wan-col-note">${esc(c.note)}</td>
+        <td class="wan-col-photo">${c.url ? `<a class="wan-photo" href="${esc(c.url)}" title="${plural(c.photos, 'photo', 'photos')}" aria-label="${plural(c.photos, 'photo', 'photos')}">${CAMERA}</a>` : ''}</td>
+      </tr>`).join('');
+    $('wan-count').textContent = rows.length === current.checkins.length
+      ? plural(rows.length, 'check-in', 'check-ins')
+      : `${rows.length} of ${current.checkins.length}`;
+  }
+
+  // ---- repeat visits: this year, or the all-time leaderboard ----
+  let scopeAll = false, leaderboard = null;
+  const repeatSort = sortable('wan-repeats', 'visits', 'num', -1, renderRepeats);
+  function renderRepeats() {
+    const source = scopeAll ? leaderboard : current.venues.filter(v => v.visits > 1);
+    const rows = repeatSort.sort(source.filter(v => matches(v.venue)));
+    document.querySelector('#wan-repeats tbody').innerHTML = rows.map((v, i) => `
+      <tr class="${i % 2 === 0 ? 'gl-row-even' : 'gl-row-odd'}">
+        <td class="wan-col-num">${v.visits}</td>
+        <td title="${esc(v.venue)}">${esc(v.venue)}</td>
+        <td>${esc(v.first)}</td>
+        <td>${esc(v.last)}</td>
+        <td class="wan-col-num">${v.years ?? ''}</td>
+      </tr>`).join('');
+    $('wan-repeat-count').textContent = plural(rows.length, 'place', 'places');
+    document.querySelectorAll('#wan-repeats .wan-col-years').forEach(c => { c.style.display = scopeAll ? '' : 'none'; });
+    document.querySelectorAll('#wan-repeats td:last-child').forEach(c => { c.style.display = scopeAll ? '' : 'none'; });
+  }
+
+  async function setScope(all) {
+    if (all && !leaderboard) leaderboard = (await fetchGz(LEADERBOARD_URL)).venues;
+    scopeAll = all;
+    $('wan-scope-all').setAttribute('aria-pressed', String(all));
+    $('wan-scope-year').setAttribute('aria-pressed', String(!all));
+    repeatSort.reset();
+    renderRepeats();
+  }
+
+  // ---- year switching ----
+  let heatmap = {};
+  const renderHeatmap = year => window.renderYearHeatmap('wan-heatmap', year, heatmap, ['check-in', 'check-ins']);
+  const yearCache = {};
+
+  async function switchYear(year) {
+    yearCache[year] = yearCache[year] || await fetchGz(YEAR_URLS[year]);
+    current = yearCache[year];
+    $('wan-scope-year').textContent = year;
+    checkinSort.reset();
+    renderMap(current.venues);
+    renderCheckins();
+    renderRepeats();
+    renderHeatmap(parseInt(year));
+  }
+
+  try {
+    const years = Object.keys(YEAR_URLS).sort().reverse();
+    if (!years.length) throw new Error('no checkins-<year>.json.gz found, run swarm-visuals.py');
+    if (HEATMAP_URL) { try { heatmap = (await fetchGz(HEATMAP_URL)).heatmap || {}; } catch (e) { console.error(e); } }
+
+    const sel = $('wan-year-select');
+    years.forEach(y => sel.add(new Option(y, y)));
+    sel.addEventListener('change', () => switchYear(sel.value).catch(e => fail(e.message)));
+    $('wan-filter').addEventListener('input', () => { renderCheckins(); renderRepeats(); });
+    $('wan-scope-year').addEventListener('click', () => setScope(false).catch(e => fail(e.message)));
+    $('wan-scope-all').addEventListener('click', () => setScope(true).catch(e => fail(e.message)));
+    window.addEventListener('resize', () => renderHeatmap(parseInt(sel.value)));
+    await switchYear(years[0]);
+  } catch (err) { fail(err.message); }
+});
+</script>

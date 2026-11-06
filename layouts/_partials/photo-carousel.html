@@ -1,0 +1,34 @@
+{{- /* swipeable photo gallery, shared by /fitness/ and /wanderings/ detail pages.
+      takes a list of R2 object keys, served from the media host (params.media.baseURL,
+      see media-url.html). the bytes are not in the repo. renders nothing when empty. */ -}}
+{{- with . }}
+<div class="fit-carousel" data-count="{{ len . }}">
+  <div class="fit-carousel-track">
+    {{- range . }}
+    <figure class="fit-slide"><img src="{{ partial "media-url.html" . }}" loading="lazy" alt=""></figure>
+    {{- end }}
+  </div>
+  {{- if gt (len .) 1 }}
+  <button class="fit-carousel-btn prev" aria-label="previous">‹</button>
+  <button class="fit-carousel-btn next" aria-label="next">›</button>
+  {{- end }}
+</div>
+<style>
+.fit-carousel { position: relative; margin: 1.25rem 0; }
+.fit-carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0.5rem; border-radius: 6px; }
+.fit-slide { flex: 0 0 100%; scroll-snap-align: center; margin: 0; }
+.fit-slide img { width: 100%; height: auto; border-radius: 6px; display: block; }
+.fit-carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.6rem; line-height: 1; width: 2rem; height: 2.6rem; cursor: pointer; border-radius: 4px; }
+.fit-carousel-btn.prev { left: 0.4rem; } .fit-carousel-btn.next { right: 0.4rem; }
+</style>
+<script>
+  (() => {
+    const c = document.querySelector('.fit-carousel');
+    if (!c) return;
+    const track = c.querySelector('.fit-carousel-track');
+    const step = () => track.clientWidth;
+    c.querySelector('.prev')?.addEventListener('click', () => track.scrollBy({left: -step(), behavior: 'smooth'}));
+    c.querySelector('.next')?.addEventListener('click', () => track.scrollBy({left:  step(), behavior: 'smooth'}));
+  })();
+</script>
+{{- end }}

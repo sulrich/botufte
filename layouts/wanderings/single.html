@@ -1,0 +1,51 @@
+{{- /* one swarm check-in with photos. written by bin/swarm-visuals.py in the site repo.
+      lat/lng are absent on purpose for check-ins near a hidden venue, so the map is
+      optional. the section is unlisted, so there's no prev/next here. */ -}}
+{{- define "content" -}}
+  {{- $df := .Site.Params.dateFormat | default "02-Jan-2006" -}}
+  {{- $hasPin := and .Params.lat .Params.lng -}}
+  {{- if $hasPin }}{{ .Store.Set "hasLeaflet" true }}{{ end -}}
+
+  <article class="single wanderings-checkin">
+    <h1 class="single-title">{{ .Title }}</h1>
+
+    <div class="post-meta">
+      <div class="post-meta-line">
+        <span>{{ partial "icon.html" "calendar" }} <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format $df }}</time></span>
+      </div>
+    </div>
+
+    {{- with .Params.note }}<p class="wan-note">{{ . }}</p>{{ end }}
+
+    {{- partial "photo-carousel.html" .Params.photos }}
+
+    {{- if $hasPin }}
+    {{- $maps := site.Params.maps | default dict }}
+    <div id="wan-checkin-map" class="wan-checkin-map"
+      data-lat="{{ .Params.lat }}" data-lng="{{ .Params.lng }}"
+      data-tiles="{{ $maps.tileurl | default "https://tile.openstreetmap.org/{z}/{x}/{y}.png" }}"
+      data-attribution="{{ $maps.attribution | default "&copy; OpenStreetMap contributors" }}"></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const el = document.getElementById('wan-checkin-map');
+        if (!el || !window.L) return;
+        const pos = [parseFloat(el.dataset.lat), parseFloat(el.dataset.lng)];
+        const map = L.map(el, { scrollWheelZoom: false }).setView(pos, 15);
+        L.tileLayer(el.dataset.tiles, { attribution: el.dataset.attribution }).addTo(map);
+        L.circleMarker(pos, { radius: 7, color: '#fc4c02', fillColor: '#fc4c02', fillOpacity: 0.7 }).addTo(map);
+      });
+    </script>
+    {{- end }}
+
+    <div class="post-footer">
+      <nav class="post-nav">
+        <a href="{{ "wanderings/" | relURL }}">all wanderings</a>
+      </nav>
+    </div>
+  </article>
+
+  <style>
+    .wan-note { margin: 1rem 0; }
+    .wan-checkin-map { width: 100%; height: 300px; border: 1px solid var(--border); border-radius: 6px; margin: 1.25rem 0; }
+  </style>
+{{- end -}}
