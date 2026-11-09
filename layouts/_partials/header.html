@@ -10,13 +10,19 @@
           {{- $active := or ($.IsMenuCurrent "main" .) ($.HasMenuCurrent "main" .) -}}
           <li{{ if .HasChildren }} class="has-children"{{ end }}>
             <a href="{{ .URL }}"{{ with .Title }} title="{{ . }}"{{ end }}{{ if $active }} class="active"{{ end }}>
+              {{- with .Pre }}<span class="menu-pre">{{ . }}</span>{{ end -}}
               {{- .Name -}}
+              {{- with .Post }}<span class="menu-post">{{ . }}</span>{{ end -}}
               {{- if .HasChildren }} <span class="caret" aria-hidden="true">▾</span>{{ end -}}
             </a>
             {{- with .Children -}}
               <ul class="submenu">
                 {{- range . -}}
-                  <li><a href="{{ .URL }}"{{ with .Title }} title="{{ . }}"{{ end }}>{{ .Name }}</a></li>
+                  <li><a href="{{ .URL }}"{{ with .Title }} title="{{ . }}"{{ end }}>
+                    {{- with .Pre }}<span class="menu-pre">{{ . }}</span>{{ end -}}
+                    {{- .Name -}}
+                    {{- with .Post }}<span class="menu-post">{{ . }}</span>{{ end -}}
+                  </a></li>
                 {{- end -}}
               </ul>
             {{- end -}}
