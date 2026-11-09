@@ -67,6 +67,10 @@
 .submenu li { padding: 0; }
 .submenu a { display: block; padding: 0.3rem 0.9rem; white-space: nowrap; }
 .menu .caret { font-size: 0.7rem; opacity: 0.6; }
+// optional per-entry decoration from the menu config's pre / post fields
+// (an emoji, fa icon, inline svg, etc.)
+.menu .menu-pre { margin-right: 0.3em; }
+.menu .menu-post { margin-left: 0.3em; }
 
 // icon buttons (theme toggle, search, menu toggle)
 .icon-btn {
