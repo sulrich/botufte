@@ -1,0 +1,15 @@
+{{- /* site analytics. each service renders only when the site config turns it on,
+      and only in production builds so `hugo server` doesn't count local views.
+
+      neatstats:        [params.analytics.neatstats] enable = true
+      google analytics: [services.googleAnalytics] ID = "G-XXXXXXXXXX"
+                        (hugo's own config key; the embedded template honors
+                        [privacy.googleAnalytics] disable / respectDoNotTrack) */ -}}
+{{- if hugo.IsProduction -}}
+  {{- if site.Params.analytics.neatstats.enable }}
+<script src="https://neatstats.net/view.js"></script>
+  {{- end -}}
+  {{- with site.Config.Services.GoogleAnalytics.ID }}
+{{ template "_internal/google_analytics.html" $ }}
+  {{- end -}}
+{{- end -}}
