@@ -38,5 +38,8 @@
   {{- if or (.Store.Get "hasMap") (.Store.Get "hasTrip") (.Store.Get "hasLeaflet") }}{{ partial "leaflet-lib.html" . }}{{ end -}}
   {{- if .Store.Get "hasMap" }}{{ partial "leaflet.html" . }}{{ end -}}
   {{- if .Store.Get "hasTrip" }}{{ partial "trip/scripts.html" . }}{{ end -}}
+
+  {{- /* analytics: emits nothing unless enabled in the site config */ -}}
+  {{- partial "analytics.html" . -}}
 </body>
 </html>

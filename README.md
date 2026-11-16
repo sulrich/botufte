@@ -76,6 +76,12 @@ submodules automatically.
 `params.page.toc.enable`, `params.footer`, `params.author`, `params.dateFormat`,
 and `[menu.main]` (supports one level of nesting for dropdowns).
 
+analytics are opt-in and only render in production builds (`hugo server` stays
+quiet). `[params.analytics.neatstats] enable = true` adds the neatstats
+`view.js` script. `[services.googleAnalytics] ID = "G-..."` adds hugo's built-in
+gtag snippet, which honors `[privacy.googleAnalytics]`. leave either out and
+nothing is added to the page.
+
 ### social links
 
 `[[params.social]]` is an **ordered array of tables** — icons render on the home
